@@ -1,5 +1,6 @@
 import {TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useMemo, useState, memo} from 'react';
+import {useTranslation} from 'react-i18next';
 import PrimaryView from '../atoms/PrimaryView';
 import AppHeader from '../atoms/AppHeader';
 import CustomInput from '../atoms/CustomInput';
@@ -31,6 +32,7 @@ interface CategoryEntryProps {
 }
 
 const CategoryEntry: React.FC<CategoryEntryProps> = ({type, route}) => {
+  const {t} = useTranslation();
   const colors = useThemeColors();
   const dispatch = useDispatch<AppDispatch>();
   const categoryData = route?.params;
@@ -186,19 +188,19 @@ const CategoryEntry: React.FC<CategoryEntryProps> = ({type, route}) => {
     <PrimaryView colors={colors} style={gs.justifyBetween} dismissKeyboardOnTouch>
       <View>
         <View style={[gs.mb20, gs.mt20]}>
-          <AppHeader onPress={goBack} colors={colors} text={isAddButton ? 'Add Category' : 'Edit Category'} />
+          <AppHeader onPress={goBack} colors={colors} text={isAddButton ? t('category.addTitle') : t('category.editTitle')} />
         </View>
 
         <CustomInput
           colors={colors}
           input={categoryName}
           setInput={setCategoryName}
-          placeholder="eg. Stationary"
-          label="Category Name"
+          placeholder={t('category.namePlaceholder')}
+          label={t('category.nameLabel')}
           schema={categorySchema}
         />
 
-        <PrimaryText size={12} color={colors.secondaryText} style={gs.mb8}>Appearance</PrimaryText>
+        <PrimaryText size={12} color={colors.secondaryText} style={gs.mb8}>{t('category.appearanceLabel')}</PrimaryText>
         <View style={[gs.row, gs.gap8, gs.mb15]}>
           <TouchableOpacity
             onPress={handleOpenIconPicker}
@@ -226,9 +228,9 @@ const CategoryEntry: React.FC<CategoryEntryProps> = ({type, route}) => {
               />
             </View>
             <View style={gs.flex1}>
-              <PrimaryText size={11} color={colors.secondaryText}>Icon</PrimaryText>
+              <PrimaryText size={11} color={colors.secondaryText}>{t('category.iconLabel')}</PrimaryText>
               <PrimaryText size={13} weight="medium">
-                {selectedIcon ? 'Change' : 'Choose'}
+                {selectedIcon ? t('common.change') : t('common.choose')}
               </PrimaryText>
             </View>
           </TouchableOpacity>
@@ -254,9 +256,9 @@ const CategoryEntry: React.FC<CategoryEntryProps> = ({type, route}) => {
               ]}
             />
             <View style={gs.flex1}>
-              <PrimaryText size={11} color={colors.secondaryText}>Color</PrimaryText>
+              <PrimaryText size={11} color={colors.secondaryText}>{t('category.colorLabel')}</PrimaryText>
               <PrimaryText size={13} weight="medium">
-                {selectedColor ? 'Change' : 'Choose'}
+                {selectedColor ? t('common.change') : t('common.choose')}
               </PrimaryText>
             </View>
           </TouchableOpacity>
@@ -266,7 +268,7 @@ const CategoryEntry: React.FC<CategoryEntryProps> = ({type, route}) => {
           <>
             <View style={[gs.rowCenter, gs.gap8, gs.mb8]}>
               <View style={[gs.flex1, {height: 0.5, backgroundColor: colors.secondaryAccent}]} />
-              <PrimaryText size={11} color={colors.secondaryText}>or pick from defaults</PrimaryText>
+              <PrimaryText size={11} color={colors.secondaryText}>{t('category.orPickFromDefaults')}</PrimaryText>
               <View style={[gs.flex1, {height: 0.5, backgroundColor: colors.secondaryAccent}]} />
             </View>
             <View style={[gs.minH55, gs.mt5]}>
@@ -285,7 +287,7 @@ const CategoryEntry: React.FC<CategoryEntryProps> = ({type, route}) => {
       <PrimaryButton
         onPress={handleAddFromDefaultOrAddCategory}
         colors={colors}
-        buttonTitle={isAddButton ? 'Add' : 'Update'}
+        buttonTitle={isAddButton ? t('common.add') : t('common.update')}
         disabled={!isValid && selectedCategories.length === 0}
       />
     </PrimaryView>

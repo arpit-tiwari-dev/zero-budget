@@ -4,7 +4,7 @@ import useThemeColors from '../../hooks/useThemeColors';
 import PrimaryText from '../atoms/PrimaryText';
 import Icon from '../atoms/Icons';
 import {getCurrentMonthName} from '../../utils/dateUtils';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {gs} from '../../styles/globalStyles';
 
 interface TransactionCardProps {
@@ -24,8 +24,9 @@ const getIconName = (day: string) => {
   return 'calendar';
 };
 
-const TransactionCard: React.FC<TransactionCardProps> = React.memo(({currencySymbol, day, totalSpent}) => {
+const TransactionCard: React.FC<TransactionCardProps> = React.memo(({day, totalSpent}) => {
   const colors = useThemeColors();
+  const formatAmount = useFormatAmount();
 
   return (
     <View
@@ -50,8 +51,7 @@ const TransactionCard: React.FC<TransactionCardProps> = React.memo(({currencySym
       </View>
       <View style={[gs.rounded8, gs.py8, gs.px10, {backgroundColor: colors.lightAccent}]}>
         <PrimaryText size={14} weight="semibold" variant="number">
-          {currencySymbol}
-          {Number.isInteger(totalSpent) ? formatCurrency(totalSpent) : formatCurrency(Number(totalSpent.toFixed(2)))}
+          {formatAmount(totalSpent)}
         </PrimaryText>
       </View>
     </View>

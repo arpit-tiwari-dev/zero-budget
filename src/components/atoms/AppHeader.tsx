@@ -4,6 +4,7 @@ import Icon from './Icons';
 import PrimaryText from './PrimaryText';
 import {Colors} from '../../hooks/useThemeColors';
 import {gs, hitSlop} from '../../styles/globalStyles';
+import {useTranslation} from 'react-i18next';
 
 interface AppHeaderProps {
   onPress: () => void;
@@ -16,6 +17,7 @@ interface AppHeaderProps {
 
 const AppHeader: React.FC<AppHeaderProps> = React.memo(
   ({onPress, colors, text, subtitle, iconSize = 24, rightAction}) => {
+    const {t} = useTranslation();
     return (
       <View style={[gs.row, gs.itemsCenter, gs.justifyBetween]}>
         <View style={[gs.row, gs.itemsCenter, gs.flex1]}>
@@ -23,7 +25,7 @@ const AppHeader: React.FC<AppHeaderProps> = React.memo(
             onPress={onPress}
             style={gs.mr10}
             hitSlop={hitSlop}
-            accessibilityLabel="Go back"
+            accessibilityLabel={t('common.goBack')}
             accessibilityRole="button">
             <Icon name="arrow-left" size={iconSize} color={colors.primaryText} />
           </TouchableOpacity>

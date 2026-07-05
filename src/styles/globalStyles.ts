@@ -73,17 +73,17 @@ export const gs = StyleSheet.create({
   mb20: {marginBottom: 20},
   mb30: {marginBottom: 30},
 
-  ml3: {marginLeft: 3},
-  ml8: {marginLeft: 8},
-  ml10: {marginLeft: 10},
-  ml12: {marginLeft: 12},
-  ml20: {marginLeft: 20},
+  ml3: {marginStart: 3},
+  ml8: {marginStart: 8},
+  ml10: {marginStart: 10},
+  ml12: {marginStart: 12},
+  ml20: {marginStart: 20},
 
-  mr3: {marginRight: 3},
-  mr5: {marginRight: 5},
-  mr6: {marginRight: 6},
-  mr8: {marginRight: 8},
-  mr10: {marginRight: 10},
+  mr3: {marginEnd: 3},
+  mr5: {marginEnd: 5},
+  mr6: {marginEnd: 6},
+  mr8: {marginEnd: 8},
+  mr10: {marginEnd: 10},
 
   mx3: {marginHorizontal: 3},
   mx16: {marginHorizontal: 16},
@@ -116,11 +116,11 @@ export const gs = StyleSheet.create({
   pb20: {paddingBottom: 20},
   pb80: {paddingBottom: 80},
 
-  pl10: {paddingLeft: 10},
-  pl15: {paddingLeft: 15},
+  pl10: {paddingStart: 10},
+  pl15: {paddingStart: 15},
 
-  pr5: {paddingRight: 5},
-  pr10: {paddingRight: 10},
+  pr5: {paddingEnd: 5},
+  pr10: {paddingEnd: 10},
 
   px10: {paddingHorizontal: 10},
   px12: {paddingHorizontal: 12},
@@ -313,7 +313,7 @@ export const gs = StyleSheet.create({
   mt3p: {marginTop: '3%'},
   mt5p: {marginTop: '5%'},
   mt8p: {marginTop: '8%'},
-  mt12p: {marginBottom: '12%'},
+  mt12p: {marginTop: '12%'},
   mt30p: {marginTop: '30%'},
   mt60p: {marginTop: '60%'},
 

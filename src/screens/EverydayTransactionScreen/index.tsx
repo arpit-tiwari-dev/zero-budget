@@ -1,5 +1,6 @@
 import {View} from 'react-native';
 import React, {useMemo} from 'react';
+import {useTranslation} from 'react-i18next';
 import {useRoute} from '@react-navigation/native';
 import AppHeader from '../../components/atoms/AppHeader';
 import {goBack} from '../../utils/navigationUtils';
@@ -9,13 +10,15 @@ import useEverydayTransaction, {EverydayTransactionRouteProp} from './useEveryda
 import PrimaryView from '../../components/atoms/PrimaryView';
 import PrimaryText from '../../components/atoms/PrimaryText';
 import Icon from '../../components/atoms/Icons';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {gs} from '../../styles/globalStyles';
 
 const EverydayTransactionScreen = () => {
   const route = useRoute<EverydayTransactionRouteProp>();
-  const {formatDate, formattedDate, colors, currencySymbol, expenseDate, allEverydayTransactions, totalAmountForTheDay} =
+  const {formatDate, formattedDate, colors, expenseDate, allEverydayTransactions, totalAmountForTheDay} =
     useEverydayTransaction(route);
+  const {t} = useTranslation();
+  const formatAmount = useFormatAmount();
 
   const listHeader = useMemo(
     () => (
@@ -27,13 +30,13 @@ const EverydayTransactionScreen = () => {
           gs.px10,
           {backgroundColor: colors.secondaryAccent},
         ]}>
-        <PrimaryText size={13} weight="semibold" style={gs.textCenter}>Total Spent</PrimaryText>
+        <PrimaryText size={13} weight="semibold" style={gs.textCenter}>{t('transaction.totalSpent')}</PrimaryText>
         <PrimaryText size={13} weight="semibold" style={gs.textCenter}>
-          {currencySymbol}{formatCurrency(totalAmountForTheDay)}
+          {formatAmount(totalAmountForTheDay)}
         </PrimaryText>
       </View>
     ),
-    [colors, currencySymbol, totalAmountForTheDay],
+    [colors, formatAmount, totalAmountForTheDay],
   );
 
   const listEmpty = useMemo(
@@ -43,7 +46,7 @@ const EverydayTransactionScreen = () => {
           <Icon name="receipt" size={22} color={colors.secondaryText} />
         </View>
         <PrimaryText size={13} color={colors.secondaryText} style={gs.mt10}>
-          No transactions on {formatDateUtil(expenseDate, 'Do MMM YY')}
+          {t('transaction.noTransactionsOnDate', {date: formatDateUtil(expenseDate, 'Do MMM YY')})}
         </PrimaryText>
       </View>
     ),
@@ -56,7 +59,6 @@ const EverydayTransactionScreen = () => {
         <AppHeader onPress={goBack} colors={colors} text={formattedDate === undefined ? formattedDate : formatDate} />
       </View>
       <TransactionList
-        currencySymbol={currencySymbol}
         allExpenses={allEverydayTransactions}
         targetDate={expenseDate}
         ListHeaderComponent={listHeader}

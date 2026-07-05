@@ -3,6 +3,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Platform, Pressable, Text, View} from 'react-native';
+import {useTranslation} from 'react-i18next';
 import Icon from '../components/atoms/Icons';
 import useThemeColors from '../hooks/useThemeColors';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -29,41 +30,53 @@ const screenOptions = {
 
 const ICON_SIZE = 24;
 
-const HomeIcon = ({color}: {color: string}) => (
-  <View style={[gs.center, gs.minW70]}>
-    <View style={[gs.h26, gs.center]}>
-      <Icon name="home" size={ICON_SIZE} color={color} />
+const HomeIcon = ({color}: {color: string}) => {
+  const {t} = useTranslation();
+  return (
+    <View style={[gs.center, gs.minW70]}>
+      <View style={[gs.h26, gs.center]}>
+        <Icon name="home" size={ICON_SIZE} color={color} />
+      </View>
+      <Text style={[gs.text10, gs.fontMedium, gs.noFontPadding, gs.textCenter, gs.mt2, {color}]}>{t('tabs.home')}</Text>
     </View>
-    <Text style={[gs.text10, gs.fontMedium, gs.noFontPadding, gs.textCenter, gs.mt2, {color}]}>Home</Text>
-  </View>
-);
+  );
+};
 
-const ReportsIcon = ({color}: {color: string}) => (
-  <View style={[gs.center, gs.minW70]}>
-    <View style={[gs.h26, gs.center]}>
-      <Icon name="bar-chart-3" size={ICON_SIZE} color={color} />
+const ReportsIcon = ({color}: {color: string}) => {
+  const {t} = useTranslation();
+  return (
+    <View style={[gs.center, gs.minW70]}>
+      <View style={[gs.h26, gs.center]}>
+        <Icon name="bar-chart-3" size={ICON_SIZE} color={color} />
+      </View>
+      <Text style={[gs.text10, gs.fontMedium, gs.noFontPadding, gs.textCenter, gs.mt2, {color}]}>{t('tabs.reports')}</Text>
     </View>
-    <Text style={[gs.text10, gs.fontMedium, gs.noFontPadding, gs.textCenter, gs.mt2, {color}]}>Reports</Text>
-  </View>
-);
+  );
+};
 
-const DebtIcon = ({color}: {color: string}) => (
-  <View style={[gs.center, gs.minW70]}>
-    <View style={[gs.h26, gs.center]}>
-      <Icon name="credit-card" size={ICON_SIZE} color={color} />
+const DebtIcon = ({color}: {color: string}) => {
+  const {t} = useTranslation();
+  return (
+    <View style={[gs.center, gs.minW70]}>
+      <View style={[gs.h26, gs.center]}>
+        <Icon name="credit-card" size={ICON_SIZE} color={color} />
+      </View>
+      <Text style={[gs.text10, gs.fontMedium, gs.noFontPadding, gs.textCenter, gs.mt2, {color}]}>{t('tabs.debts')}</Text>
     </View>
-    <Text style={[gs.text10, gs.fontMedium, gs.noFontPadding, gs.textCenter, gs.mt2, {color}]}>Debts</Text>
-  </View>
-);
+  );
+};
 
-const CategoriesIcon = ({color}: {color: string}) => (
-  <View style={[gs.center, gs.minW70]}>
-    <View style={[gs.h26, gs.center]}>
-      <Icon name="shapes" size={ICON_SIZE} color={color} />
+const CategoriesIcon = ({color}: {color: string}) => {
+  const {t} = useTranslation();
+  return (
+    <View style={[gs.center, gs.minW70]}>
+      <View style={[gs.h26, gs.center]}>
+        <Icon name="shapes" size={ICON_SIZE} color={color} />
+      </View>
+      <Text style={[gs.text10, gs.fontMedium, gs.noFontPadding, gs.textCenter, gs.mt2, {color}]}>{t('tabs.categories')}</Text>
     </View>
-    <Text style={[gs.text10, gs.fontMedium, gs.noFontPadding, gs.textCenter, gs.mt2, {color}]}>Categories</Text>
-  </View>
-);
+  );
+};
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

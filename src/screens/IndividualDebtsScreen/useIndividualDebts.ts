@@ -14,6 +14,7 @@ import useAmountColor from '../../hooks/useAmountColor';
 import {fetchIndividualDebtor, selectIndividualDebtorData} from '../../redux/slice/IndividualDebtorSlice';
 import {AppDispatch} from '../../redux/store';
 import {useDialog} from '../../context/DialogContext';
+import {useTranslation} from 'react-i18next';
 
 export type IndividualDebtsScreenRouteProp = RouteProp<
   {
@@ -30,6 +31,7 @@ const useIndividualDebts = (route: IndividualDebtsScreenRouteProp) => {
   const colors = useThemeColors();
   const dispatch = useDispatch<AppDispatch>();
   const {showDialog} = useDialog();
+  const {t} = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const individualDebts = (useSelector(selectDebtData) ?? []) as DebtDocType[];
   const debtLoading = useSelector(selectDebtLoading);
@@ -95,7 +97,7 @@ const useIndividualDebts = (route: IndividualDebtsScreenRouteProp) => {
     } else {
       const confirmed = await showDialog({
         type: 'warning',
-        message: `First you need to settle payment with ${debtorName}`,
+        message: t('debts.settlePrompt', {name: debtorName}),
       });
       if (confirmed) {
         await deleteAllDebtsByDebtorId(debtorId);
@@ -103,19 +105,19 @@ const useIndividualDebts = (route: IndividualDebtsScreenRouteProp) => {
         dispatch(fetchAllDebts());
       }
     }
-  }, [debtorId, debtorName, dispatch, individualDebts.length, showDialog]);
+  }, [debtorId, debtorName, dispatch, individualDebts.length, showDialog, t]);
 
   const handleMarkAsPaid = useCallback(async () => {
     const confirmed = await showDialog({
       type: 'success',
-      message: `You want to settle payment with ${debtorName}?`,
+      message: t('debts.settleConfirm', {name: debtorName}),
     });
     if (confirmed) {
       await deleteAllDebtsByDebtorId(debtorId);
       dispatch(fetchDebtsByDebtor(debtorId));
       dispatch(fetchAllDebts());
     }
-  }, [debtorId, debtorName, dispatch, showDialog]);
+  }, [debtorId, debtorName, dispatch, showDialog, t]);
 
   const handleUpdateDebtor = useCallback(() => {
     navigate('UpdateDebtorScreen', {debtorId, debtorName, debtorType});

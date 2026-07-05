@@ -1,5 +1,6 @@
 import {View} from 'react-native';
 import React, {useCallback, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {SheetManager, SheetProps} from 'react-native-actions-sheet';
 import useThemeColors from '../hooks/useThemeColors';
 import {CustomBottomSheet} from '../components/atoms/CustomBottomSheet';
@@ -9,6 +10,7 @@ import {nameSchema} from '../utils/validationSchema';
 import {gs} from '../styles/globalStyles';
 
 const ChangeNameSheet: React.FC<SheetProps<'change-name-sheet'>> = React.memo(props => {
+  const {t} = useTranslation();
   const colors = useThemeColors();
   const [name, setName] = useState(props.payload?.currentName ?? '');
 
@@ -23,7 +25,7 @@ const ChangeNameSheet: React.FC<SheetProps<'change-name-sheet'>> = React.memo(pr
     <CustomBottomSheet
       sheetId={props.sheetId}
       header={{
-        title: 'Change Name',
+        title: t('sheets.changeName'),
         showCloseButton: true,
         onClosePress: () => void SheetManager.hide(props.sheetId),
       }}
@@ -34,14 +36,14 @@ const ChangeNameSheet: React.FC<SheetProps<'change-name-sheet'>> = React.memo(pr
             colors={colors}
             input={name}
             setInput={setName}
-            placeholder={'Enter your name'}
+            placeholder={t('sheets.nameplaceholder')}
             schema={nameSchema}
           />
         </View>
         <PrimaryButton
           onPress={handleConfirm}
           colors={colors}
-          buttonTitle="Update"
+          buttonTitle={t('common.update')}
           disabled={!nameSchema.safeParse(name).success}
         />
       </View>

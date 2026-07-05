@@ -1,4 +1,5 @@
 import {useDispatch, useSelector} from 'react-redux';
+import {useTranslation} from 'react-i18next';
 import {selectUserName, setUserName} from '../../redux/slice/userNameSlice';
 import {selectUserId} from '../../redux/slice/userIdSlice';
 import {
@@ -19,6 +20,7 @@ import {fetchAllData, selectAllData} from '../../redux/slice/allDataSlice';
 import {AppDispatch} from '../../redux/store';
 
 const useSettings = () => {
+  const {t} = useTranslation();
   const userName = useSelector(selectUserName);
   const userId = useSelector(selectUserId);
   const currencyId = useSelector(selectCurrencyId);
@@ -47,6 +49,7 @@ const useSettings = () => {
   }, [setThemeMode]);
 
   const handleNameUpdate = useCallback(async (newName: string) => {
+    if (!userId) return;
     try {
       await updateUserById(userId, {username: newName});
       dispatch(setUserName(newName));
@@ -59,6 +62,7 @@ const useSettings = () => {
 
   const handleCurrencyUpdate = useCallback(
     async (currency: {code: string; name: string; symbol: string}) => {
+      if (!currencyId) return;
       try {
         await updateCurrencyById(currencyId, {
           name: currency.name,
@@ -129,44 +133,54 @@ const useSettings = () => {
     });
   }, []);
 
-  const handleDeleteAllData = useCallback(async () => {
+  const handleDeleteAllData = useCallback(async (exportFn?: () => Promise<void>) => {
+    const wantsBackup = await showDialog({
+      type: 'info',
+      message: t('settings.deleteBackupPrompt'),
+      okLabel: t('settings.export'),
+      cancelLabel: t('common.skip'),
+    });
+    if (wantsBackup && exportFn) {
+      await exportFn();
+    }
+
     const confirmed = await showDialog({
       type: 'warning',
-      message: 'Are you sure you want to delete all your data?',
+      message: t('settings.deleteConfirm'),
     });
-    if (confirmed) {
-      await deleteAllData();
-      StorageService.setItemSync('isOnboarded', JSON.stringify(false));
-      dispatch(setIsOnboarded(false));
-    }
-  }, [dispatch, showDialog]);
+    if (!confirmed) return;
+
+    await deleteAllData();
+    StorageService.setItemSync('isOnboarded', JSON.stringify(false));
+    dispatch(setIsOnboarded(false));
+  }, [dispatch, showDialog, t]);
 
   const handleExportResult = useCallback(
     async (success: boolean) => {
       if (success) {
         await showAlert({
           type: 'success',
-          message: 'Your data is successfully exported in Downloads folder',
+          message: t('settings.exportSuccess'),
         });
       } else {
         await showAlert({
           type: 'error',
-          message: 'There is an error in exporting your data',
+          message: t('settings.exportError'),
         });
       }
     },
-    [showAlert],
+    [showAlert, t],
   );
 
   const requestStorageViaDialog = useCallback(async () => {
     const confirmed = await showDialog({
       type: 'warning',
-      message: 'You need to manually give permission for the storage to download your data',
+      message: t('settings.storagePermission'),
     });
     if (confirmed) {
       Linking.openSettings();
     }
-  }, [showDialog]);
+  }, [showDialog, t]);
 
   return {
     appVersion,

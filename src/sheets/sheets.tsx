@@ -6,6 +6,7 @@ import CurrencyPickerSheet from './CurrencyPickerSheet';
 import ChangeNameSheet from './ChangeNameSheet';
 import MonthYearPickerSheet from './MonthYearPickerSheet';
 import ThemePickerSheet from './ThemePickerSheet';
+import LanguagePickerSheet from './LanguagePickerSheet';
 
 registerSheet('icon-picker-sheet', IconPickerSheet);
 registerSheet('color-picker-sheet', ColorPickerSheet);
@@ -14,6 +15,7 @@ registerSheet('currency-picker-sheet', CurrencyPickerSheet);
 registerSheet('change-name-sheet', ChangeNameSheet);
 registerSheet('month-year-picker-sheet', MonthYearPickerSheet);
 registerSheet('theme-picker-sheet', ThemePickerSheet);
+registerSheet('language-picker-sheet', LanguagePickerSheet);
 
 declare module 'react-native-actions-sheet' {
   interface Sheets {
@@ -61,6 +63,12 @@ declare module 'react-native-actions-sheet' {
       payload: {
         currentTheme?: string;
         onSelect?: (theme: string) => void;
+      };
+    }>;
+    'language-picker-sheet': SheetDefinition<{
+      payload: {
+        currentLanguage?: string;
+        onSelect?: (language: string) => void;
       };
     }>;
   }

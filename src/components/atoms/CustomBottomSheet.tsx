@@ -6,6 +6,7 @@ import useThemeColors from '../../hooks/useThemeColors';
 import PrimaryText from './PrimaryText';
 import Icon from './Icons';
 import {gs} from '../../styles/globalStyles';
+import {useTranslation} from 'react-i18next';
 
 export interface CustomBottomSheetHeader {
   title?: string;
@@ -48,6 +49,7 @@ function CustomBottomSheetComponent({
 }: Readonly<CustomBottomSheetProps>) {
   const colors = useThemeColors();
   const safeAreaInsets = useSafeAreaInsets();
+  const {t} = useTranslation();
 
   const containerStyles = useMemo(() => {
     return [
@@ -125,7 +127,7 @@ function CustomBottomSheetComponent({
                   onPress={handleClosePress}
                   style={[gs.size35, gs.center, gs.rounded16, gs.ml12, {backgroundColor: colors.secondaryAccent}]}
                   accessibilityRole="button"
-                  accessibilityLabel="Close"
+                  accessibilityLabel={t('common.close')}
                   hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
                   <Icon name="x" size={18} color={colors.primaryText} />
                 </TouchableOpacity>

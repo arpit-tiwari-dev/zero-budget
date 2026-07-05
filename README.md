@@ -63,12 +63,15 @@ Track money you owe or are owed. Manage debtors and individual debts.
 
 | Layer | Technology |
 |-------|------------|
-| Framework | React Native |
-| Database | WatermelonDB (SQLite) |
-| State | Redux + Redux Saga |
-| UI | Custom components + Lucide icons |
-| Navigation | React Navigation |
+| Framework | React Native 0.84 |
+| Language | TypeScript 5.8 (strict) |
+| Database | WatermelonDB (SQLite + JSI) |
+| State | Redux Toolkit + Redux Persist |
+| Validation | Zod 4 |
+| UI | Custom atomic components + Lucide icons |
+| Navigation | React Navigation 7 |
 | Lists | FlashList (performant lists) |
+| Storage | MMKV (preferences & persistence) |
 
 ### Why WatermelonDB?
 
@@ -83,22 +86,27 @@ We migrated from Realm to WatermelonDB because:
 
 ```
 src/
-├── components/        # Reusable UI components
-│   ├── atoms/         # Basic components (Button, Input, Text)
+├── components/        # Reusable UI components (atomic design)
+│   ├── atoms/         # Basic components (Button, Input, Text, ErrorBoundary)
 │   └── molecules/     # Composite components
 ├── screens/           # App screens
 │   └── ScreenName/
-│       ├── index.tsx      # UI component
-│       ├── useScreenName.ts  # Business logic hook
-│       └── style.ts       # Styles
+│       ├── index.tsx          # UI component
+│       └── useScreenName.ts   # Business logic hook
 ├── watermelondb/      # Database layer
-│   ├── models/        # Data models
+│   ├── models/        # WatermelonDB model classes
 │   ├── services/      # CRUD operations
 │   ├── schema.ts      # Database schema
-│   └── database.ts    # DB initialization
-├── redux/             # State management
-├── navigation/        # Navigation config
+│   ├── migrations.ts  # Schema migrations
+│   └── database.ts    # DB initialization (lazy Proxy)
+├── backend/           # Startup & data logic
+│   ├── export/        # Export format, upgrader, validation
+│   └── migrations/    # Sequential data migrations
+├── redux/             # Redux Toolkit slices & store
+├── navigation/        # React Navigation config
+├── context/           # React Context providers (Theme, Dialog)
 ├── hooks/             # Global hooks
+├── styles/            # Global styles (utility-first)
 ├── utils/             # Helper functions
 └── sheets/            # Bottom sheet components
 ```
@@ -106,8 +114,8 @@ src/
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- Yarn or npm
+- Node.js >= 22.11.0
+- Bun (package manager)
 - Android Studio / Xcode
 
 ### Installation
@@ -118,13 +126,16 @@ git clone https://github.com/indranilbhuin/zero.git
 cd zero
 
 # Install dependencies
-yarn install
+bun install
 
 # iOS only
-cd ios && pod install && cd ..
+cd ios && bundle exec pod install && cd ..
 
 # Run the app
-yarn android  # or yarn ios
+bun run android  # or bun run ios
+
+# Type-check
+bun run typecheck
 ```
 
 ## Contributing

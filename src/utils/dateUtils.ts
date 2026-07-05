@@ -4,6 +4,8 @@ import advancedFormat from 'dayjs/plugin/advancedFormat';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import localeData from 'dayjs/plugin/localeData';
+import {getDeviceLocaleInfo} from './locale';
+import i18n from '../i18n';
 
 dayjs.extend(calendar);
 dayjs.extend(advancedFormat);
@@ -11,7 +13,57 @@ dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(localeData);
 
-// Cache locale data - computed once at module load, not on every function call
+const DAYJS_LOCALES: Record<string, () => void> = {
+  ar: () => require('dayjs/locale/ar'),
+  bg: () => require('dayjs/locale/bg'),
+  bn: () => require('dayjs/locale/bn'),
+  cs: () => require('dayjs/locale/cs'),
+  da: () => require('dayjs/locale/da'),
+  de: () => require('dayjs/locale/de'),
+  el: () => require('dayjs/locale/el'),
+  es: () => require('dayjs/locale/es'),
+  fa: () => require('dayjs/locale/fa'),
+  fi: () => require('dayjs/locale/fi'),
+  fr: () => require('dayjs/locale/fr'),
+  he: () => require('dayjs/locale/he'),
+  hi: () => require('dayjs/locale/hi'),
+  hr: () => require('dayjs/locale/hr'),
+  hu: () => require('dayjs/locale/hu'),
+  id: () => require('dayjs/locale/id'),
+  it: () => require('dayjs/locale/it'),
+  ja: () => require('dayjs/locale/ja'),
+  ko: () => require('dayjs/locale/ko'),
+  ms: () => require('dayjs/locale/ms'),
+  nb: () => require('dayjs/locale/nb'),
+  nl: () => require('dayjs/locale/nl'),
+  pl: () => require('dayjs/locale/pl'),
+  pt: () => require('dayjs/locale/pt'),
+  ro: () => require('dayjs/locale/ro'),
+  ru: () => require('dayjs/locale/ru'),
+  sk: () => require('dayjs/locale/sk'),
+  sv: () => require('dayjs/locale/sv'),
+  th: () => require('dayjs/locale/th'),
+  tr: () => require('dayjs/locale/tr'),
+  uk: () => require('dayjs/locale/uk'),
+  vi: () => require('dayjs/locale/vi'),
+  zh: () => require('dayjs/locale/zh'),
+};
+
+const initDayjsLocale = () => {
+  try {
+    const {languageCode} = getDeviceLocaleInfo();
+    const loader = DAYJS_LOCALES[languageCode];
+    if (loader) {
+      loader();
+      dayjs.locale(languageCode);
+    }
+  } catch {
+    // Stay on English
+  }
+};
+
+initDayjsLocale();
+
 const MONTHS = dayjs.months();
 const MONTHS_SHORT = dayjs.monthsShort();
 const WEEKDAYS = dayjs.weekdays();
@@ -113,11 +165,11 @@ export const getYesterday = (): Dayjs => dayjs().subtract(1, 'day');
 
 export const formatCalendar = (date: DateInput): string => {
   return parseDate(date).calendar(null, {
-    sameDay: '[Today]',
-    nextDay: '[Tomorrow]',
+    sameDay: '[' + i18n.t('calendar.today') + ']',
+    nextDay: '[' + i18n.t('calendar.tomorrow') + ']',
     nextWeek: 'dddd',
-    lastDay: '[Yesterday]',
-    lastWeek: '[Last] dddd',
+    lastDay: '[' + i18n.t('calendar.yesterday') + ']',
+    lastWeek: i18n.t('calendar.lastWeek'),
     sameElse: 'Do MMM YYYY',
   });
 };

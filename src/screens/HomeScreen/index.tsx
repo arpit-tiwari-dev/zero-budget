@@ -1,14 +1,17 @@
 import React, {useCallback, useMemo} from 'react';
 import {TouchableOpacity, View} from 'react-native';
+import {useTranslation} from 'react-i18next';
 import Icon from '../../components/atoms/Icons';
 import {navigate} from '../../utils/navigationUtils';
 import TransactionList from '../../components/molecules/TransactionList';
 import HeaderContainer from '../../components/molecules/HeaderContainer';
 import useHome from './useHome';
+import useSwipeTutorial from '../../hooks/useSwipeTutorial';
+import SwipeTutorialTooltip from '../../components/atoms/SwipeTutorialTooltip';
 import PrimaryView from '../../components/atoms/PrimaryView';
 import PrimaryText from '../../components/atoms/PrimaryText';
 import EmptyState from '../../components/atoms/EmptyState';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {SheetManager} from 'react-native-actions-sheet';
 import {gs, hitSlop} from '../../styles/globalStyles';
 
@@ -30,6 +33,9 @@ const HomeScreen = () => {
     avgPerDay,
     handleMonthYearSelect,
   } = useHome();
+  const {t} = useTranslation();
+  const formatAmount = useFormatAmount();
+  const {shouldShowTutorial, tutorialRef, dismissTutorial} = useSwipeTutorial({screen: 'home', itemCount: sortedTransactions.length});
 
   const openMonthPicker = useCallback(() => {
     void SheetManager.show('month-year-picker-sheet', {
@@ -62,13 +68,13 @@ const HomeScreen = () => {
             <Icon name="chevron-down" size={14} color={colors.buttonText} />
           </View>
           <PrimaryText size={20} weight="bold" variant="number" color={colors.buttonText}>
-            {currencySymbol}{formatCurrency(totalSpent)}
+            {formatAmount(totalSpent)}
           </PrimaryText>
         </View>
 
         <View style={[gs.rowCenter, gs.gap8, gs.mt4]}>
           <PrimaryText size={11} color={colors.buttonText} variant="number" style={{opacity: 0.7}}>
-            {transactionCount} transaction{transactionCount === 1 ? '' : 's'}
+            {t('home.transactionCount', {count: transactionCount})}
           </PrimaryText>
           {/* <PrimaryText size={11} color={colors.buttonText} style={{opacity: 0.7}}>·</PrimaryText>
           <PrimaryText size={11} color={colors.buttonText} variant="number" style={{opacity: 0.7}}>
@@ -93,10 +99,10 @@ const HomeScreen = () => {
     <>
       <PrimaryView colors={colors} useBottomPadding={false} useSidePadding={false}>
         <View style={[gs.px16, gs.mb15]}>
-          <HeaderContainer headerText={`Hey, ${userName}`} />
+          <HeaderContainer headerText={t('home.greeting', {name: userName})} />
         </View>
+        {shouldShowTutorial && <SwipeTutorialTooltip onDismiss={dismissTutorial} />}
         <TransactionList
-          currencySymbol={currencySymbol}
           allExpenses={sortedTransactions}
           edgeToEdge
           targetMonth={yearMonth}
@@ -105,6 +111,7 @@ const HomeScreen = () => {
           refreshing={refreshing}
           onRefresh={onRefresh}
           contentContainerStyle={gs.pb80}
+          tutorialSwipeRef={tutorialRef}
         />
       </PrimaryView>
       <View style={[gs.absolute, gs.bottom15, gs.right15, gs.zIndex1]}>
@@ -112,7 +119,7 @@ const HomeScreen = () => {
           style={[gs.size50, gs.rounded8, gs.center, {backgroundColor: colors.secondaryBackground}]}
           onPress={() => navigate('AddTransactionsScreen')}
           hitSlop={hitSlop}
-          accessibilityLabel="Add new transaction"
+          accessibilityLabel={t('home.addTransaction')}
           accessibilityRole="button">
           <Icon name="plus-circle" size={30} color={colors.primaryText} />
         </TouchableOpacity>

@@ -1,5 +1,6 @@
 import {ScrollView, TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {SheetManager, SheetProps} from 'react-native-actions-sheet';
 import useThemeColors from '../hooks/useThemeColors';
 import {CustomBottomSheet} from '../components/atoms/CustomBottomSheet';
@@ -11,6 +12,7 @@ const MONTHS_SHORT = getMonthNamesShort();
 const CURRENT_YEAR = getCurrentYear();
 
 const MonthYearPickerSheet: React.FC<SheetProps<'month-year-picker-sheet'>> = React.memo(props => {
+  const {t} = useTranslation();
   const colors = useThemeColors();
   const {selectedMonth, selectedYear, availableYears, onSelect} = props.payload ?? {};
 
@@ -41,7 +43,7 @@ const MonthYearPickerSheet: React.FC<SheetProps<'month-year-picker-sheet'>> = Re
     <CustomBottomSheet
       sheetId={props.sheetId}
       header={{
-        title: 'Select Month & Year',
+        title: t('sheets.selectMonthYear'),
         showCloseButton: true,
         onClosePress: () => void SheetManager.hide(props.sheetId),
       }}
@@ -113,7 +115,7 @@ const MonthYearPickerSheet: React.FC<SheetProps<'month-year-picker-sheet'>> = Re
             {backgroundColor: colors.accentGreen},
           ]}>
           <PrimaryText size={14} weight="semibold" color={colors.buttonText}>
-            Done
+            {t('common.done')}
           </PrimaryText>
         </TouchableOpacity>
       </View>

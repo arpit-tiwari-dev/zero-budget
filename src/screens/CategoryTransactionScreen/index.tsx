@@ -1,5 +1,6 @@
 import {View} from 'react-native';
 import React, {useMemo} from 'react';
+import {useTranslation} from 'react-i18next';
 import {useRoute} from '@react-navigation/native';
 import AppHeader from '../../components/atoms/AppHeader';
 import {goBack} from '../../utils/navigationUtils';
@@ -8,14 +9,13 @@ import useCategoryTransaction, {CategoryTransactionRouteProp} from './useCategor
 import PrimaryView from '../../components/atoms/PrimaryView';
 import PrimaryText from '../../components/atoms/PrimaryText';
 import Icon from '../../components/atoms/Icons';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {gs} from '../../styles/globalStyles';
 
 const CategoryTransactionScreen = () => {
   const route = useRoute<CategoryTransactionRouteProp>();
   const {
     colors,
-    currencySymbol,
     transactions,
     totalAmount,
     categoryName,
@@ -24,6 +24,8 @@ const CategoryTransactionScreen = () => {
     monthLabel,
     yearMonth,
   } = useCategoryTransaction(route);
+  const {t} = useTranslation();
+  const formatAmount = useFormatAmount();
 
   const listHeader = useMemo(
     () => (
@@ -35,18 +37,18 @@ const CategoryTransactionScreen = () => {
           <View style={gs.flex1}>
             <PrimaryText size={11} color={colors.secondaryText}>{monthLabel}</PrimaryText>
             <PrimaryText size={15} weight="semibold" variant="number">
-              {currencySymbol}{formatCurrency(totalAmount)}
+              {formatAmount(totalAmount)}
             </PrimaryText>
           </View>
           <View style={[gs.px10, gs.py3, gs.rounded8, {backgroundColor: categoryColor + '20'}]}>
             <PrimaryText size={12} weight="semibold" variant="number" color={categoryColor}>
-              {transactions.length} {transactions.length === 1 ? 'txn' : 'txns'}
+              {t('transaction.txnCount', {count: transactions.length})}
             </PrimaryText>
           </View>
         </View>
       </View>
     ),
-    [colors, currencySymbol, totalAmount, categoryColor, categoryIcon, monthLabel, transactions.length],
+    [colors, formatAmount, totalAmount, categoryColor, categoryIcon, monthLabel, transactions.length],
   );
 
   const listEmpty = useMemo(
@@ -56,7 +58,7 @@ const CategoryTransactionScreen = () => {
           <Icon name="receipt" size={22} color={colors.secondaryText} />
         </View>
         <PrimaryText size={13} color={colors.secondaryText} style={gs.mt10}>
-          No transactions in {categoryName}
+          {t('transaction.noTransactionsInCategory', {category: categoryName})}
         </PrimaryText>
       </View>
     ),
@@ -69,7 +71,6 @@ const CategoryTransactionScreen = () => {
         <AppHeader onPress={goBack} colors={colors} text={categoryName} />
       </View>
       <TransactionList
-        currencySymbol={currencySymbol}
         allExpenses={transactions}
         targetMonth={yearMonth}
         ListHeaderComponent={listHeader}

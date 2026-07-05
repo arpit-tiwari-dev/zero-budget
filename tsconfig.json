@@ -17,6 +17,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*", "App.tsx", "index.js", "declarations.d.ts"],
+  "include": ["src/**/*", "src/i18n/i18next.d.ts", "App.tsx", "index.js", "declarations.d.ts"],
   "exclude": ["node_modules", "references", "__tests__"]
 }

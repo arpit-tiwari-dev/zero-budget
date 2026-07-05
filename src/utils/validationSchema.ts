@@ -1,40 +1,41 @@
 import {z} from 'zod';
+import i18n from '../i18n';
 
 export const nameSchema = z
   .string()
   .refine(value => /^[A-Za-z\s]+$/.test(value), {
-    message: 'Name can only contain letters and spaces.',
+    message: i18n.t('validation.nameLettersOnly'),
   })
   .refine(value => value.length >= 3, {
-    message: 'Name must be at least 3 characters long.',
+    message: i18n.t('validation.nameMinLength'),
   })
   .refine(value => value.length <= 50, {
-    message: 'Name cannot exceed 50 characters.',
+    message: i18n.t('validation.nameMaxLength'),
   });
 
 export const expenseSchema = z
   .string()
-  .min(1, 'Expense must be at least 1 character long.')
-  .max(25, 'Expense cannot exceed 25 characters.');
+  .min(1, i18n.t('validation.expenseMinLength'))
+  .max(25, i18n.t('validation.expenseMaxLength'));
 
 export const expenseDescriptionSchema = z
   .string()
-  .min(0, 'Expense Description must be at least 1 character long.')
-  .max(50, 'Expense Description cannot exceed 50 characters.');
+  .min(0, i18n.t('validation.descriptionMinLength'))
+  .max(50, i18n.t('validation.descriptionMaxLength'));
 
 export const expenseAmountSchema = z
   .number()
-  .min(0.01, 'Expense Amount cannot be less than 0.')
-  .max(1000000, 'Expense Amount cannot exceed 1000000.');
+  .min(0.01, i18n.t('validation.amountMin'))
+  .max(1000000, i18n.t('validation.amountMax'));
 
 export const categorySchema = z
   .string()
   .refine(value => /^[A-Za-z0-9\s]+$/.test(value), {
-    message: 'Category Name can only contain letters, spaces, and numbers.',
+    message: i18n.t('validation.categoryLettersOnly'),
   })
   .refine(value => value.length >= 1, {
-    message: 'Category Name must be at least 1 character long.',
+    message: i18n.t('validation.categoryMinLength'),
   })
   .refine(value => value.length <= 18, {
-    message: 'Category Name cannot exceed 18 characters.',
+    message: i18n.t('validation.categoryMaxLength'),
   });

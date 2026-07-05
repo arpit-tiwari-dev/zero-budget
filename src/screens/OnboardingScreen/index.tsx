@@ -1,5 +1,6 @@
 import {ScrollView, TouchableOpacity, View} from 'react-native';
 import React from 'react';
+import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../../components/atoms/PrimaryButton';
 import defaultCategories from '../../../assets/jsons/defaultCategories.json';
 import useOnboarding from './useOnboarding';
@@ -16,21 +17,22 @@ interface CategoryData {
 
 const OnboardingScreen = () => {
   const {colors, handleSkip, handleSubmit, toggleCategorySelection, isCategorySelected} = useOnboarding();
+  const {t} = useTranslation();
 
   return (
     <PrimaryView colors={colors} style={gs.justifyBetween}>
       <View style={gs.flex1}>
         <TouchableOpacity style={[gs.selfEnd, gs.pt5p]} onPress={handleSkip}>
-          <PrimaryText size={13} weight="medium" color={colors.secondaryText}>Skip</PrimaryText>
+          <PrimaryText size={13} weight="medium" color={colors.secondaryText}>{t('common.skip')}</PrimaryText>
         </TouchableOpacity>
 
         <View style={gs.pt10p}>
-          <PrimaryText size={28} weight="bold">Pick your</PrimaryText>
-          <PrimaryText size={28} weight="bold">categories</PrimaryText>
+          <PrimaryText size={28} weight="bold">{t('onboarding.title')}</PrimaryText>
+          <PrimaryText size={28} weight="bold">{t('onboarding.titleSuffix')}</PrimaryText>
         </View>
 
         <PrimaryText size={14} color={colors.secondaryText} style={[gs.mt6, gs.mb20]}>
-          Select the ones you want to track
+          {t('onboarding.subtitle')}
         </PrimaryText>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[gs.row, gs.wrap, gs.pb80]}>
@@ -71,7 +73,7 @@ const OnboardingScreen = () => {
           })}
         </ScrollView>
       </View>
-      <PrimaryButton onPress={handleSubmit} colors={colors} buttonTitle={'Continue'} />
+      <PrimaryButton onPress={handleSubmit} colors={colors} buttonTitle={t('common.continue')} />
     </PrimaryView>
   );
 };

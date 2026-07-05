@@ -1,5 +1,6 @@
 import {TextInput, TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {SheetManager, SheetProps} from 'react-native-actions-sheet';
 import {FlashList} from '@shopify/flash-list';
 import useThemeColors from '../hooks/useThemeColors';
@@ -17,6 +18,7 @@ interface Currency {
 }
 
 const CurrencyPickerSheet: React.FC<SheetProps<'currency-picker-sheet'>> = React.memo(props => {
+  const {t} = useTranslation();
   const colors = useThemeColors();
   const initialCurrency = props.payload?.selectedCurrency;
   const [searchText, setSearchText] = useState('');
@@ -84,7 +86,7 @@ const CurrencyPickerSheet: React.FC<SheetProps<'currency-picker-sheet'>> = React
     <CustomBottomSheet
       sheetId={props.sheetId}
       header={{
-        title: 'Select Currency',
+        title: t('sheets.selectCurrency'),
         showCloseButton: true,
         onClosePress: () => void SheetManager.hide(props.sheetId),
       }}
@@ -109,7 +111,7 @@ const CurrencyPickerSheet: React.FC<SheetProps<'currency-picker-sheet'>> = React
             style={[gs.px15, gs.h48, gs.wFull, gs.fontMedium, gs.noFontPadding, {color: colors.primaryText}]}
             value={searchText}
             onChangeText={setSearchText}
-            placeholder="Search currency..."
+            placeholder={t('sheets.searchCurrency')}
             placeholderTextColor={colors.secondaryText}
           />
         </View>
@@ -123,7 +125,7 @@ const CurrencyPickerSheet: React.FC<SheetProps<'currency-picker-sheet'>> = React
           />
         </View>
 
-        <PrimaryButton onPress={handleConfirm} colors={colors} buttonTitle="Update" disabled={!selectedCurrency} />
+        <PrimaryButton onPress={handleConfirm} colors={colors} buttonTitle={t('common.update')} disabled={!selectedCurrency} />
       </View>
     </CustomBottomSheet>
   );

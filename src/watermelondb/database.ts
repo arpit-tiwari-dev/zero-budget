@@ -5,37 +5,50 @@ import {schema} from './schema';
 import {migrations} from './migrations';
 import {User, Category, Expense, Currency, Debtor, Debt} from './models';
 
-// Lazy initialization - database is only created on first access
 let _database: Database | null = null;
+let _databaseError: Error | null = null;
+
+/**
+ * Returns the database setup error if initialization failed.
+ * Check this in App.tsx to show a user-facing fallback.
+ */
+export const getDatabaseError = (): Error | null => _databaseError;
 
 const getDatabase = (): Database => {
-  if (!_database) {
-    const adapter = new SQLiteAdapter({
-      schema,
-      migrations,
-      jsi: true,
-      onSetUpError: error => {
-        if (__DEV__) {
-          console.error('WatermelonDB setup error:', error);
-        }
-      },
-    });
+  if (_databaseError) {
+    throw _databaseError;
+  }
 
-    _database = new Database({
-      adapter,
-      modelClasses: [User, Category, Expense, Currency, Debtor, Debt],
-    });
+  if (!_database) {
+    try {
+      const adapter = new SQLiteAdapter({
+        schema,
+        migrations,
+        jsi: true,
+        onSetUpError: error => {
+          _databaseError = error instanceof Error ? error : new Error(String(error));
+          if (__DEV__) {
+            console.error('WatermelonDB setup error:', error);
+          }
+        },
+      });
+
+      _database = new Database({
+        adapter,
+        modelClasses: [User, Category, Expense, Currency, Debtor, Debt],
+      });
+    } catch (error) {
+      _databaseError = error instanceof Error ? error : new Error(String(error));
+      throw _databaseError;
+    }
   }
   return _database;
 };
 
-// Export as a getter to maintain backward compatibility
-// This creates the database on first access, not at module load
 export const database = new Proxy({} as Database, {
   get(_target, prop) {
     const db = getDatabase();
     const value = db[prop as keyof Database];
-    // Bind methods to the database instance
     if (typeof value === 'function') {
       return value.bind(db);
     }

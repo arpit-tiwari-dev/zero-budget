@@ -1,5 +1,6 @@
 import {View, ViewStyle} from 'react-native';
 import React, {ReactNode} from 'react';
+import {useTranslation} from 'react-i18next';
 import PrimaryText from './PrimaryText';
 import {Colors} from '../../hooks/useThemeColors';
 import Icon from './Icons';
@@ -23,15 +24,16 @@ const iconMap: Record<EmptyStateType, IconName> = {
   Categories: 'shapes',
 };
 
-const messageMap: Record<EmptyStateType, string> = {
-  Transactions: 'No transactions yet',
-  Insights: 'No insights yet',
-  Debts: 'No debts yet',
-  Categories: 'No categories yet',
+const messageKeyMap: Record<EmptyStateType, 'emptyState.transactions' | 'emptyState.insights' | 'emptyState.debts' | 'emptyState.categories'> = {
+  Transactions: 'emptyState.transactions',
+  Insights: 'emptyState.insights',
+  Debts: 'emptyState.debts',
+  Categories: 'emptyState.categories',
 };
 
 const EmptyState: React.FC<EmptyStateProps> = React.memo(({colors, type, style, message, actionButton}) => {
-  const displayMessage = message ?? messageMap[type];
+  const {t} = useTranslation();
+  const displayMessage = message ?? t(messageKeyMap[type]);
 
   return (
     <View style={[gs.center, gs.mt30p, style]}>

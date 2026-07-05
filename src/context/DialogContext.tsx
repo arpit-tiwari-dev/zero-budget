@@ -1,5 +1,6 @@
 import React, {createContext, useContext, useState, useCallback, useRef, useMemo, type ReactNode} from 'react';
 import {Modal, TouchableOpacity, View} from 'react-native';
+import {useTranslation} from 'react-i18next';
 import PrimaryText from '../components/atoms/PrimaryText';
 import Icon from '../components/atoms/Icons';
 import {useThemeColors} from './ThemeContext';
@@ -39,10 +40,12 @@ interface DialogProviderProps {
 
 export const DialogProvider: React.FC<DialogProviderProps> = ({children}) => {
   const colors = useThemeColors();
+  const {t} = useTranslation();
   const [visible, setVisible] = useState(false);
   const [display, setDisplay] = useState<InternalDialog | null>(null);
   const activeRef = useRef<InternalDialog | null>(null);
   const queueRef = useRef<InternalDialog[]>([]);
+  const dismissingRef = useRef(false);
 
   const present = useCallback((dialog: InternalDialog) => {
     activeRef.current = dialog;
@@ -51,6 +54,7 @@ export const DialogProvider: React.FC<DialogProviderProps> = ({children}) => {
   }, []);
 
   const showNext = useCallback(() => {
+    dismissingRef.current = false;
     if (queueRef.current.length > 0) {
       const next = queueRef.current.shift();
       if (next) {
@@ -65,15 +69,16 @@ export const DialogProvider: React.FC<DialogProviderProps> = ({children}) => {
     (result: boolean) => {
       activeRef.current?.resolve(result);
       activeRef.current = null;
+      dismissingRef.current = true;
       setVisible(false);
-      setTimeout(showNext, 350);
+      setTimeout(showNext, 400);
     },
     [showNext],
   );
 
   const enqueue = useCallback(
     (dialog: InternalDialog) => {
-      if (activeRef.current) {
+      if (activeRef.current || dismissingRef.current) {
         queueRef.current.push(dialog);
       } else {
         present(dialog);
@@ -157,11 +162,11 @@ export const DialogProvider: React.FC<DialogProviderProps> = ({children}) => {
                   <TouchableOpacity
                     onPress={() => dismiss(false)}
                     activeOpacity={0.7}
-                    accessibilityLabel={display.cancelLabel ?? 'Cancel'}
+                    accessibilityLabel={display.cancelLabel ?? t('common.cancel')}
                     accessibilityRole="button">
                     <View style={[gs.w60, gs.h35, gs.rounded5, gs.center, {backgroundColor: colors.accentRed}]}>
                       <PrimaryText size={13} weight="semibold" color={colors.sameWhite}>
-                        {display.cancelLabel ?? 'Cancel'}
+                        {display.cancelLabel ?? t('common.cancel')}
                       </PrimaryText>
                     </View>
                   </TouchableOpacity>
@@ -169,11 +174,11 @@ export const DialogProvider: React.FC<DialogProviderProps> = ({children}) => {
                 <TouchableOpacity
                   onPress={() => dismiss(true)}
                   activeOpacity={0.7}
-                  accessibilityLabel={display?.okLabel ?? 'Ok'}
+                  accessibilityLabel={display?.okLabel ?? t('common.ok')}
                   accessibilityRole="button">
                   <View style={[gs.w60, gs.h35, gs.rounded5, gs.center, {backgroundColor: colors.accentGreen}]}>
                     <PrimaryText size={13} weight="semibold" color={colors.buttonText}>
-                      {display?.okLabel ?? 'Ok'}
+                      {display?.okLabel ?? t('common.ok')}
                     </PrimaryText>
                   </View>
                 </TouchableOpacity>

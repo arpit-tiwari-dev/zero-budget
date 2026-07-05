@@ -56,8 +56,10 @@ const useReports = () => {
   }, [userId]);
 
   useEffect(() => {
-    dispatch(fetchExpensesByMonth(yearMonth));
-  }, [dispatch, yearMonth]);
+    if (userId) {
+      dispatch(fetchExpensesByMonth(yearMonth));
+    }
+  }, [dispatch, userId, yearMonth]);
 
   const handleMonthYearSelect = useCallback(
     (monthIndex: number, year: number) => {

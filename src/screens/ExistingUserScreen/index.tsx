@@ -1,5 +1,6 @@
 import {ActivityIndicator, TouchableOpacity, View} from 'react-native';
 import React, {memo, useMemo} from 'react';
+import {useTranslation} from 'react-i18next';
 import PrimaryView from '../../components/atoms/PrimaryView';
 import PrimaryText from '../../components/atoms/PrimaryText';
 import Icon from '../../components/atoms/Icons';
@@ -57,6 +58,7 @@ const ExistingUserScreen = () => {
     syncStatus,
     syncStats,
   } = useExistingUser();
+  const {t} = useTranslation();
 
   const showSyncProgress = isSyncing || isSyncComplete;
 
@@ -64,12 +66,12 @@ const ExistingUserScreen = () => {
     <PrimaryView colors={colors} style={gs.justifyBetween}>
       <View>
           <View style={gs.pt10p}>
-            <PrimaryText size={28} weight="bold">Restore your</PrimaryText>
-            <PrimaryText size={28} weight="bold">data</PrimaryText>
+            <PrimaryText size={28} weight="bold">{t('existingUser.title')}</PrimaryText>
+            <PrimaryText size={28} weight="bold">{t('existingUser.titleSuffix')}</PrimaryText>
           </View>
 
           <PrimaryText size={14} color={colors.secondaryText} style={gs.mt6}>
-            Upload your exported zero backup file
+            {t('existingUser.subtitle')}
           </PrimaryText>
 
           <TouchableOpacity
@@ -107,13 +109,13 @@ const ExistingUserScreen = () => {
                     {fileName}
                   </PrimaryText>
                   <PrimaryText size={11} color={isSyncComplete ? colors.accentGreen : colors.secondaryText}>
-                    {isSyncComplete ? 'Sync complete' : 'Syncing...'}
+                    {isSyncComplete ? t('existingUser.syncComplete') : t('existingUser.syncing')}
                   </PrimaryText>
                 </>
               ) : (
                 <>
                   <PrimaryText size={13} weight="medium">{uploadMessage}</PrimaryText>
-                  <PrimaryText size={11} color={colors.secondaryText}>Tap to select file</PrimaryText>
+                  <PrimaryText size={11} color={colors.secondaryText}>{t('existingUser.tapToSelect')}</PrimaryText>
                 </>
               )}
             </View>
@@ -121,27 +123,27 @@ const ExistingUserScreen = () => {
 
           {fileName && !isSyncing && (
             <TouchableOpacity onPress={reUpload} style={gs.mt10}>
-              <PrimaryText size={12} color={colors.accentOrange}>Upload different file</PrimaryText>
+              <PrimaryText size={12} color={colors.accentOrange}>{t('existingUser.uploadDifferent')}</PrimaryText>
             </TouchableOpacity>
           )}
 
           {showSyncProgress && (
             <View style={gs.mt30}>
               <PrimaryText size={14} weight="semibold" color={isSyncComplete ? colors.accentGreen : colors.primaryText} style={gs.mb10}>
-                {isSyncComplete ? 'All done' : 'Syncing your data...'}
+                {isSyncComplete ? t('existingUser.allDone') : t('existingUser.syncingData')}
               </PrimaryText>
 
-              <SyncStatusItem label="Profile" status={syncStatus.user} colors={colors} />
-              <SyncStatusItem label="Categories" status={syncStatus.categories} count={syncStats.categories} colors={colors} />
-              <SyncStatusItem label="Expenses" status={syncStatus.expenses} count={syncStats.expenses} colors={colors} />
-              <SyncStatusItem label="Debtors" status={syncStatus.debtors} count={syncStats.debtors} colors={colors} />
-              <SyncStatusItem label="Debts" status={syncStatus.debts} count={syncStats.debts} colors={colors} />
-              <SyncStatusItem label="Currency" status={syncStatus.currencies} colors={colors} />
+              <SyncStatusItem label={t('existingUser.syncProfile')} status={syncStatus.user} colors={colors} />
+              <SyncStatusItem label={t('existingUser.syncCategories')} status={syncStatus.categories} count={syncStats.categories} colors={colors} />
+              <SyncStatusItem label={t('existingUser.syncExpenses')} status={syncStatus.expenses} count={syncStats.expenses} colors={colors} />
+              <SyncStatusItem label={t('existingUser.syncDebtors')} status={syncStatus.debtors} count={syncStats.debtors} colors={colors} />
+              <SyncStatusItem label={t('existingUser.syncDebts')} status={syncStatus.debts} count={syncStats.debts} colors={colors} />
+              <SyncStatusItem label={t('existingUser.syncCurrency')} status={syncStatus.currencies} colors={colors} />
             </View>
           )}
         </View>
 
-      <PrimaryButton onPress={handleContinue} colors={colors} buttonTitle={'Continue'} disabled={!isSyncComplete} />
+      <PrimaryButton onPress={handleContinue} colors={colors} buttonTitle={t('common.continue')} disabled={!isSyncComplete} />
     </PrimaryView>
   );
 };

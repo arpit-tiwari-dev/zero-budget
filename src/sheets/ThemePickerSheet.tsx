@@ -1,5 +1,6 @@
 import {TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {SheetManager, SheetProps} from 'react-native-actions-sheet';
 import useThemeColors from '../hooks/useThemeColors';
 import {CustomBottomSheet} from '../components/atoms/CustomBottomSheet';
@@ -9,6 +10,7 @@ import {gs} from '../styles/globalStyles';
 const THEMES = ['light', 'dark', 'system'] as const;
 
 const ThemePickerSheet: React.FC<SheetProps<'theme-picker-sheet'>> = React.memo(props => {
+  const {t} = useTranslation();
   const colors = useThemeColors();
   const [selected, setSelected] = useState(props.payload?.currentTheme ?? 'system');
 
@@ -21,7 +23,7 @@ const ThemePickerSheet: React.FC<SheetProps<'theme-picker-sheet'>> = React.memo(
     <CustomBottomSheet
       sheetId={props.sheetId}
       header={{
-        title: 'Select Theme',
+        title: t('sheets.selectTheme'),
         showCloseButton: true,
         onClosePress: () => void SheetManager.hide(props.sheetId),
       }}
@@ -31,7 +33,7 @@ const ThemePickerSheet: React.FC<SheetProps<'theme-picker-sheet'>> = React.memo(
           <TouchableOpacity key={theme} onPress={() => setSelected(theme)} activeOpacity={0.6}>
             <View style={[gs.rowBetweenCenter, gs.py12]}>
               <PrimaryText size={15} weight={selected === theme ? 'semibold' : 'medium'}>
-                {theme.charAt(0).toUpperCase() + theme.slice(1)}
+                {theme === 'light' ? t('settings.themeLight') : theme === 'dark' ? t('settings.themeDark') : t('settings.themeSystem')}
               </PrimaryText>
               <View
                 style={[
@@ -53,7 +55,7 @@ const ThemePickerSheet: React.FC<SheetProps<'theme-picker-sheet'>> = React.memo(
           activeOpacity={0.7}
           style={[gs.mt10, gs.py12, gs.rounded10, gs.center, {backgroundColor: colors.accentGreen}]}>
           <PrimaryText size={14} weight="semibold" color={colors.buttonText}>
-            Apply
+            {t('common.apply')}
           </PrimaryText>
         </TouchableOpacity>
       </View>

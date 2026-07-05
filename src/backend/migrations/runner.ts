@@ -1,7 +1,18 @@
 import StorageService from '../../utils/asyncStorageService';
 import {DATA_MIGRATIONS} from './registry';
+import {appendErrorLog} from '../../utils/errorLog';
 
 const MIGRATION_VERSION_KEY = 'data_migration_version';
+const MIGRATION_RETRY_KEY = 'data_migration_retry_count';
+const MIGRATION_FAILED_KEY = 'data_migration_failed';
+const MAX_RETRIES = 3;
+
+/**
+ * Returns true if migrations have permanently failed (exceeded retry limit).
+ */
+export const hasMigrationFailed = (): boolean => {
+  return StorageService.getBoolean(MIGRATION_FAILED_KEY);
+};
 
 /**
  * Sequential data migration runner.
@@ -9,12 +20,15 @@ const MIGRATION_VERSION_KEY = 'data_migration_version';
  * - Reads current version from MMKV
  * - Runs each pending migration in order (version > current)
  * - Advances version ONLY after each migration succeeds
- * - If a migration fails, stops and retries on next app launch
- *
- * Compatible with the previous dataMigrations.ts system — same MMKV key,
- * so users who already ran migration v1 won't re-run it.
+ * - If a migration fails, increments retry counter
+ * - After MAX_RETRIES consecutive failures on the same version, sets a
+ *   permanent failure flag and stops retrying
  */
 export const runMigrations = async (): Promise<void> => {
+  if (hasMigrationFailed()) {
+    return;
+  }
+
   const currentVersion = StorageService.getNumber(MIGRATION_VERSION_KEY) ?? 0;
 
   const pending = DATA_MIGRATIONS
@@ -22,6 +36,7 @@ export const runMigrations = async (): Promise<void> => {
     .sort((a, b) => a.version - b.version);
 
   if (pending.length === 0) {
+    StorageService.setNumber(MIGRATION_RETRY_KEY, 0);
     return;
   }
 
@@ -29,9 +44,27 @@ export const runMigrations = async (): Promise<void> => {
     try {
       await migration.up();
       StorageService.setNumber(MIGRATION_VERSION_KEY, migration.version);
+      StorageService.setNumber(MIGRATION_RETRY_KEY, 0);
     } catch (error) {
+      const retryCount = (StorageService.getNumber(MIGRATION_RETRY_KEY) ?? 0) + 1;
+      StorageService.setNumber(MIGRATION_RETRY_KEY, retryCount);
+
+      const err = error instanceof Error ? error : new Error(String(error));
+      appendErrorLog(err, false);
+
       if (__DEV__) {
-        console.error(`Data migration ${migration.version} (${migration.name}) failed:`, error);
+        console.error(
+          `Data migration ${migration.version} (${migration.name}) failed (attempt ${retryCount}/${MAX_RETRIES}):`,
+          error,
+        );
+      }
+
+      if (retryCount >= MAX_RETRIES) {
+        StorageService.setBoolean(MIGRATION_FAILED_KEY, true);
+        appendErrorLog(
+          new Error(`Migration ${migration.version} permanently failed after ${MAX_RETRIES} attempts`),
+          true,
+        );
       }
       break;
     }

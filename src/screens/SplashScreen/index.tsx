@@ -1,4 +1,5 @@
 import React from 'react';
+import {useTranslation} from 'react-i18next';
 import PrimaryButton from '../../components/atoms/PrimaryButton';
 import useSplash from './useSplash';
 import PrimaryView from '../../components/atoms/PrimaryView';
@@ -8,6 +9,7 @@ import {gs} from '../../styles/globalStyles';
 
 const SplashScreen = () => {
   const {handleClick, colors} = useSplash();
+  const {t} = useTranslation();
 
   return (
     <PrimaryView colors={colors} style={gs.justifyBetween}>
@@ -17,14 +19,14 @@ const SplashScreen = () => {
         </PrimaryText>
         <View style={gs.mt10}>
           <PrimaryText size={18} color={colors.secondaryText}>
-            Count every penny.
+            {t('splash.tagline')}
           </PrimaryText>
           <PrimaryText size={18} color={colors.secondaryText} style={{opacity: 0.5}}>
-            Privately.
+            {t('splash.taglineSuffix')}
           </PrimaryText>
         </View>
       </View>
-      <PrimaryButton onPress={handleClick} colors={colors} buttonTitle={'Get Started'} />
+      <PrimaryButton onPress={handleClick} colors={colors} buttonTitle={t('common.getStarted')} />
     </PrimaryView>
   );
 };

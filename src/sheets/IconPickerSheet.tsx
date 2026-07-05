@@ -1,5 +1,6 @@
 import {TouchableOpacity, View, useWindowDimensions} from 'react-native';
 import React, {useCallback, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {SheetManager, SheetProps} from 'react-native-actions-sheet';
 import {FlashList} from '@shopify/flash-list';
 import {CustomBottomSheet} from '../components/atoms/CustomBottomSheet';
@@ -10,6 +11,7 @@ import {CATEGORY_ICONS} from '../constants/categoryIcons';
 import {gs} from '../styles/globalStyles';
 
 const IconPickerSheet: React.FC<SheetProps<'icon-picker-sheet'>> = React.memo(props => {
+  const {t} = useTranslation();
   const colors = useThemeColors();
   const [searchText, setSearchText] = useState('');
   const selectedIcon = props.payload?.selectedIcon ?? 'null';
@@ -58,7 +60,7 @@ const IconPickerSheet: React.FC<SheetProps<'icon-picker-sheet'>> = React.memo(pr
     <CustomBottomSheet
       sheetId={props.sheetId}
       header={{
-        title: 'Select Icon',
+        title: t('sheets.selectIcon'),
         showCloseButton: true,
         onClosePress: () => {
           SheetManager.hide(props.sheetId);
@@ -71,7 +73,7 @@ const IconPickerSheet: React.FC<SheetProps<'icon-picker-sheet'>> = React.memo(pr
           input={searchText}
           label={undefined}
           colors={colors}
-          placeholder="Search Icons"
+          placeholder={t('sheets.searchIcons')}
           setInput={setSearchText}
           schema={undefined}
         />

@@ -1,0 +1,276 @@
+{
+  "common": {
+    "add": "Add",
+    "update": "Update",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "ok": "Ok",
+    "skip": "Skip",
+    "done": "Done",
+    "undo": "Undo",
+    "apply": "Apply",
+    "getStarted": "Get Started",
+    "close": "Close",
+    "goBack": "Go back",
+    "change": "Change",
+    "choose": "Choose",
+    "unknown": "Unknown"
+  },
+  "tabs": {
+    "home": "Home",
+    "reports": "Reports",
+    "categories": "Categories",
+    "debts": "Debts"
+  },
+  "splash": {
+    "tagline": "Count every penny.",
+    "taglineSuffix": "Privately."
+  },
+  "welcome": {
+    "title": "Welcome to",
+    "subtitle": "Your finances, your device, your control."
+  },
+  "carousel": {
+    "slide1Title": "Track Expenses",
+    "slide1Subtitle": "Simple, fast, always offline",
+    "slide2Title": "Visual Reports",
+    "slide2Subtitle": "Understand where your money goes",
+    "slide3Title": "Manage Debts",
+    "slide3Subtitle": "Never forget who owes what"
+  },
+  "existingUser": {
+    "title": "Restore your",
+    "titleSuffix": "data",
+    "subtitle": "Upload your exported zero backup file",
+    "tapToSelect": "Tap to select file",
+    "uploadDifferent": "Upload different file",
+    "syncComplete": "Sync complete",
+    "syncing": "Syncing...",
+    "allDone": "All done",
+    "syncingData": "Syncing your data...",
+    "uploadFile": "Upload your file",
+    "syncProfile": "Profile",
+    "syncCategories": "Categories",
+    "syncExpenses": "Expenses",
+    "syncDebtors": "Debtors",
+    "syncDebts": "Debts",
+    "syncCurrency": "Currency",
+    "storagePermissionRequired": "Storage permission is required to upload your backup file",
+    "invalidFilePath": "Invalid file path",
+    "invalidJson": "File is not valid JSON. Please select a zero export file.",
+    "invalidExport": "This file is not a valid Zero export.",
+    "invalidKey": "Invalid key. Please upload a valid zero export file.",
+    "allDataSynced": "All data synced successfully!",
+    "syncFailed": "Failed to sync data. Please try again.",
+    "syncError": "Error syncing data. Try again."
+  },
+  "personalize": {
+    "title": "What should we",
+    "titleSuffix": "call you?",
+    "subtitle": "This helps personalize your experience",
+    "nameLabel": "Your name",
+    "namePlaceholder": "eg. Indranil"
+  },
+  "onboarding": {
+    "title": "Pick your",
+    "titleSuffix": "categories",
+    "subtitle": "Select the ones you want to track"
+  },
+  "chooseCurrency": {
+    "title": "Choose your",
+    "titleSuffix": "currency",
+    "subtitle": "Select the currency you use daily",
+    "searchPlaceholder": "Search currency..."
+  },
+  "home": {
+    "greeting": "Hey, {{name}}",
+    "transactionCount_one": "{{count}} transaction",
+    "transactionCount_other": "{{count}} transactions",
+    "addTransaction": "Add new transaction"
+  },
+  "reports": {
+    "title": "Reports",
+    "total": "Total",
+    "avgPerDay": "Avg/Day",
+    "less": "Less",
+    "more": "More"
+  },
+  "debts": {
+    "title": "Debts",
+    "youOweOthers": "You owe others",
+    "othersOweYou": "Others owe you",
+    "allSettled": "All settled",
+    "personCount_one": "{{count}} person",
+    "personCount_other": "{{count}} persons",
+    "accountCount_one": "{{count}} account",
+    "accountCount_other": "{{count}} accounts",
+    "tabPerson": "Person",
+    "tabAccounts": "Accounts",
+    "addDebtor": "Add new debtor",
+    "borrowed": "Borrowed",
+    "lent": "Lent",
+    "borrowing": "Borrowing",
+    "lending": "Lending",
+    "youOwe": "You owe",
+    "owesYou": "Owes you",
+    "settled": "Settled",
+    "addDebt": "Add new debt",
+    "settlePrompt": "First you need to settle payment with {{name}}",
+    "settleConfirm": "You want to settle payment with {{name}}?",
+    "noEntriesYet": "No entries yet",
+    "noOneHereYet": "No one here yet"
+  },
+  "categories": {
+    "title": "Categories",
+    "addCategory": "Add new category"
+  },
+  "transaction": {
+    "addTitle": "Add Transaction",
+    "editTitle": "Edit Transaction",
+    "titleLabel": "Title",
+    "titlePlaceholder": "eg. Biryani",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "eg. From Aroma's",
+    "amountLabel": "Amount",
+    "dateLabel": "Date",
+    "categoryLabel": "Category",
+    "addCategoryButton": "Add Category",
+    "deleted": "Transaction deleted",
+    "totalSpent": "Total Spent",
+    "noTransactionsOnDate": "No transactions on {{date}}",
+    "noTransactionsInCategory": "No transactions in {{category}}",
+    "txnCount_one": "{{count}} txn",
+    "txnCount_other": "{{count}} txns"
+  },
+  "category": {
+    "addTitle": "Add Category",
+    "editTitle": "Edit Category",
+    "nameLabel": "Category Name",
+    "namePlaceholder": "eg. Stationary",
+    "appearanceLabel": "Appearance",
+    "iconLabel": "Icon",
+    "colorLabel": "Color",
+    "orPickFromDefaults": "or pick from defaults"
+  },
+  "debtor": {
+    "addTitle": "Add Person",
+    "editTitle": "Edit Person",
+    "typeLabel": "Type",
+    "nameLabel": "Name",
+    "namePlaceholder": "eg. John Doe or Axis"
+  },
+  "debt": {
+    "addTitle": "Add Debt",
+    "editTitle": "Edit Debt",
+    "descriptionPlaceholder": "eg. Coffee"
+  },
+  "settings": {
+    "title": "Settings",
+    "sectionPersonalization": "PERSONALIZATION",
+    "sectionData": "YOUR DATA",
+    "sectionAbout": "ABOUT",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "name": "Name",
+    "currency": "Currency",
+    "exportData": "Export data",
+    "exportSubtitle": "Import on a new device later",
+    "deleteAllData": "Delete all data",
+    "deleteSubtitle": "This action cannot be undone",
+    "reportBug": "Report a bug",
+    "reportBugSubtitle": "Found an issue? Let us know",
+    "rateApp": "Rate the app",
+    "rateAppSubtitle": "Enjoying zero? Your feedback helps!",
+    "sourceCode": "Source code",
+    "sourceCodeSubtitle": "Explore on GitHub",
+    "privacyPolicy": "Privacy Policy",
+    "termsAndConditions": "Terms & Conditions",
+    "version": "Version",
+    "footerTagline": "Embrace the simplicity of zero",
+    "footerMadeWith": "Made with passion in India",
+    "exportShareTitle": "Export Zero Data",
+    "deleteBackupPrompt": "We recommend exporting a backup before deleting. Would you like to export your data first?",
+    "deleteConfirm": "Are you sure you want to delete all your data? This cannot be undone.",
+    "export": "Export",
+    "exportSuccess": "Your data is successfully exported in Downloads folder",
+    "exportError": "There is an error in exporting your data",
+    "storagePermission": "You need to manually give permission for the storage to download your data",
+    "language": "Language"
+  },
+  "sheets": {
+    "selectTheme": "Select Theme",
+    "selectMonthYear": "Select Month & Year",
+    "changeName": "Change Name",
+    "nameplaceholder": "Enter your name",
+    "selectCurrency": "Select Currency",
+    "searchCurrency": "Search currency...",
+    "selectIcon": "Select Icon",
+    "searchIcons": "Search Icons",
+    "selectColor": "Select Color"
+  },
+  "emptyState": {
+    "transactions": "No transactions yet",
+    "insights": "No insights yet",
+    "debts": "No debts yet",
+    "categories": "No categories yet"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "The app ran into an unexpected error.\nYour data is safe.",
+    "retry": "Try Again"
+  },
+  "databaseError": {
+    "title": "Database failed to load",
+    "message": "Your data file may be corrupted.\nPlease restart the app. If this persists,\nreinstall Zero — your exported backups are safe."
+  },
+  "calendar": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday",
+    "lastWeek": "[Last] dddd"
+  },
+  "validation": {
+    "nameLettersOnly": "Name can only contain letters and spaces.",
+    "nameMinLength": "Name must be at least 3 characters long.",
+    "nameMaxLength": "Name cannot exceed 50 characters.",
+    "expenseMinLength": "Expense must be at least 1 character long.",
+    "expenseMaxLength": "Expense cannot exceed 25 characters.",
+    "descriptionMinLength": "Expense Description must be at least 1 character long.",
+    "descriptionMaxLength": "Expense Description cannot exceed 50 characters.",
+    "amountMin": "Expense Amount cannot be less than 0.",
+    "amountMax": "Expense Amount cannot exceed 1000000.",
+    "categoryLettersOnly": "Category Name can only contain letters, spaces, and numbers.",
+    "categoryMinLength": "Category Name must be at least 1 character long.",
+    "categoryMaxLength": "Category Name cannot exceed 18 characters.",
+    "unknownError": "Unknown validation error",
+    "invalidField": "Invalid field \"{{path}}\": {{message}}"
+  },
+  "backup": {
+    "iHaveBackup": "I have a backup"
+  },
+  "defaultCategories": {
+    "food": "Food",
+    "transportation": "Transportation",
+    "entertainment": "Entertainment",
+    "healthcare": "Healthcare",
+    "shopping": "Shopping",
+    "travel": "Travel",
+    "utilities": "Utilities",
+    "education": "Education",
+    "gifts": "Gifts",
+    "other": "Other"
+  },
+  "defaultDebtAccounts": {
+    "creditCard": "Credit Card",
+    "person": "Person",
+    "emi": "Emi",
+    "loan": "Loan",
+    "other": "Other"
+  },
+  "tutorial": {
+    "swipeHint": "Swipe left or right to edit or delete",
+    "gotIt": "Got it"
+  }
+}

@@ -3,7 +3,7 @@ import React, {useCallback, useMemo} from 'react';
 import PrimaryText from './PrimaryText';
 import Icon from './Icons';
 import {Colors} from '../../hooks/useThemeColors';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {gs} from '../../styles/globalStyles';
 
 interface Label {
@@ -21,11 +21,11 @@ interface Label {
 interface PieChartLabelsProps {
   colors: Colors;
   slices: Array<Label>;
-  currencySymbol: string;
   onCategoryPress?: (categoryId: string, categoryName: string, categoryColor: string, categoryIcon?: string) => void;
 }
 
-const PieChartLabels: React.FC<PieChartLabelsProps> = React.memo(({colors, slices, currencySymbol, onCategoryPress}) => {
+const PieChartLabels: React.FC<PieChartLabelsProps> = React.memo(({colors, slices, onCategoryPress}) => {
+  const formatAmount = useFormatAmount();
   const total = useMemo(() => slices.reduce((sum, s) => sum + s.value, 0), [slices]);
   const sorted = useMemo(() => [...slices].sort((a, b) => b.value - a.value), [slices]);
 
@@ -59,7 +59,7 @@ const PieChartLabels: React.FC<PieChartLabelsProps> = React.memo(({colors, slice
               {slice.key}
             </PrimaryText>
             <PrimaryText size={13} weight="semibold" variant="number" color={colors.primaryText}>
-              {currencySymbol}{formatCurrency(slice.value)}
+              {formatAmount(slice.value)}
             </PrimaryText>
             <View style={[gs.px5, gs.py3, gs.rounded5, {backgroundColor: slice.svg.fill + '20'}]}>
               <PrimaryText size={11} weight="semibold" variant="number" color={slice.svg.fill}>

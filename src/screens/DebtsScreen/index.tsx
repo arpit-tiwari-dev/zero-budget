@@ -1,5 +1,6 @@
 import {TouchableOpacity, View} from 'react-native';
 import React, {useMemo} from 'react';
+import {useTranslation} from 'react-i18next';
 import HeaderContainer from '../../components/molecules/HeaderContainer';
 import {navigate} from '../../utils/navigationUtils';
 import Icon from '../../components/atoms/Icons';
@@ -8,7 +9,7 @@ import useDebts from './useDebts';
 import PrimaryView from '../../components/atoms/PrimaryView';
 import PrimaryText from '../../components/atoms/PrimaryText';
 import EmptyState from '../../components/atoms/EmptyState';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {gs, hitSlop} from '../../styles/globalStyles';
 
 const DebtsScreen = () => {
@@ -17,18 +18,19 @@ const DebtsScreen = () => {
     allDebts,
     debtorType,
     setDebtorType,
-    currencySymbol,
     personDebtors,
     otherAccountsDebtors,
     totalDebts,
     debtors,
   } = useDebts();
+  const {t} = useTranslation();
+  const formatAmount = useFormatAmount();
 
   const overallLabel = useMemo(() => {
-    if (totalDebts > 0) return 'You owe others';
-    if (totalDebts < 0) return 'Others owe you';
-    return 'All settled';
-  }, [totalDebts]);
+    if (totalDebts > 0) return t('debts.youOweOthers');
+    if (totalDebts < 0) return t('debts.othersOweYou');
+    return t('debts.allSettled');
+  }, [totalDebts, t]);
 
   const amountColor = useMemo(() => {
     if (totalDebts > 0) return colors.accentOrange;
@@ -51,15 +53,15 @@ const DebtsScreen = () => {
           {overallLabel}
         </PrimaryText>
         <PrimaryText size={28} weight="bold" variant="number" color={amountColor}>
-          {currencySymbol}{formatCurrency(Math.abs(totalDebts))}
+          {formatAmount(Math.abs(totalDebts))}
         </PrimaryText>
         <View style={[gs.rowCenter, gs.gap6, gs.mt6]}>
           <PrimaryText size={11} color={colors.secondaryText} variant="number">
-            {personDebtors.length} person{personDebtors.length === 1 ? '' : 's'}
+            {t('debts.personCount', {count: personDebtors.length})}
           </PrimaryText>
           <PrimaryText size={11} color={colors.secondaryText}>·</PrimaryText>
           <PrimaryText size={11} color={colors.secondaryText} variant="number">
-            {otherAccountsDebtors.length} account{otherAccountsDebtors.length === 1 ? '' : 's'}
+            {t('debts.accountCount', {count: otherAccountsDebtors.length})}
           </PrimaryText>
         </View>
       </View>
@@ -80,7 +82,7 @@ const DebtsScreen = () => {
             size={13}
             weight="semibold"
             color={debtorType === 'Person' ? colors.buttonText : colors.secondaryText}>
-            Person
+            {t('debts.tabPerson')}
           </PrimaryText>
         </TouchableOpacity>
         <TouchableOpacity
@@ -98,17 +100,17 @@ const DebtsScreen = () => {
             size={13}
             weight="semibold"
             color={debtorType === 'Other' ? colors.buttonText : colors.secondaryText}>
-            Accounts
+            {t('debts.tabAccounts')}
           </PrimaryText>
         </TouchableOpacity>
       </View>
     </View>
-  ), [amountColor, colors, currencySymbol, debtorType, overallLabel, otherAccountsDebtors.length, personDebtors.length, setDebtorType, totalDebts]);
+  ), [amountColor, colors, formatAmount, debtorType, overallLabel, otherAccountsDebtors.length, personDebtors.length, setDebtorType, t, totalDebts]);
 
   return (
     <PrimaryView colors={colors} useBottomPadding={false} useSidePadding={false}>
       <View style={[gs.px16, gs.mb15]}>
-        <HeaderContainer headerText={'Debts'} />
+        <HeaderContainer headerText={t('debts.title')} />
       </View>
       {debtors.length === 0 ? (
         <View style={gs.px16}>
@@ -119,7 +121,6 @@ const DebtsScreen = () => {
           colors={colors}
           debtors={debtorType === 'Person' ? personDebtors : otherAccountsDebtors}
           allDebts={allDebts}
-          currencySymbol={currencySymbol}
           ListHeaderComponent={ListHeader}
         />
       )}
@@ -128,7 +129,7 @@ const DebtsScreen = () => {
           style={[gs.size50, gs.rounded8, gs.center, {backgroundColor: colors.secondaryBackground}]}
           onPress={() => navigate('AddDebtorScreen')}
           hitSlop={hitSlop}
-          accessibilityLabel="Add new debtor"
+          accessibilityLabel={t('debts.addDebtor')}
           accessibilityRole="button">
           <Icon name="plus-circle" size={30} color={colors.primaryText} />
         </TouchableOpacity>

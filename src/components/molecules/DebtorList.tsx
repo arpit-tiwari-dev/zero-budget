@@ -1,11 +1,12 @@
 import {TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useMemo, memo} from 'react';
+import {useTranslation} from 'react-i18next';
 import Icon from '../atoms/Icons';
 import {navigate} from '../../utils/navigationUtils';
 import {DebtorData as Debtor, DebtData as DebtDocType} from '../../watermelondb/services';
 import PrimaryText from '../atoms/PrimaryText';
 import {Colors} from '../../hooks/useThemeColors';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {FlashList} from '@shopify/flash-list';
 import {gs} from '../../styles/globalStyles';
 
@@ -14,14 +15,15 @@ interface Debt extends DebtDocType {
 }
 
 interface DebtorListProps {
-  currencySymbol: string;
   colors: Colors;
   debtors: Array<Debtor>;
   allDebts: Array<Debt>;
   ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
 }
 
-const DebtorList: React.FC<DebtorListProps> = ({colors, debtors, allDebts, currencySymbol, ListHeaderComponent}) => {
+const DebtorList: React.FC<DebtorListProps> = ({colors, debtors, allDebts, ListHeaderComponent}) => {
+  const {t} = useTranslation();
+  const formatAmount = useFormatAmount();
   const handleDebtor = useCallback((debtorId: string, debtorName: string, debtorType: string) => {
     navigate('IndividualDebtsScreen', {debtorId, debtorName, debtorType});
   }, []);
@@ -66,9 +68,9 @@ const DebtorList: React.FC<DebtorListProps> = ({colors, debtors, allDebts, curre
       const debtorId = String(debtor.id);
       const totalDebt = getDebtTotal(debtorId);
       const amountColor = getAmountColor(debtorId);
-      let debtLabel = 'Settled';
-      if (totalDebt > 0) debtLabel = 'You owe';
-      else if (totalDebt < 0) debtLabel = 'Owes you';
+      let debtLabel = t('debts.settled');
+      if (totalDebt > 0) debtLabel = t('debts.youOwe');
+      else if (totalDebt < 0) debtLabel = t('debts.owesYou');
 
       return (
         <TouchableOpacity
@@ -96,7 +98,7 @@ const DebtorList: React.FC<DebtorListProps> = ({colors, debtors, allDebts, curre
 
           <View style={[gs.itemsEnd, gs.mr3]}>
             <PrimaryText size={14} weight="bold" color={amountColor} variant="number">
-              {currencySymbol}{formatCurrency(Math.abs(totalDebt))}
+              {formatAmount(Math.abs(totalDebt))}
             </PrimaryText>
           </View>
 
@@ -104,7 +106,7 @@ const DebtorList: React.FC<DebtorListProps> = ({colors, debtors, allDebts, curre
         </TouchableOpacity>
       );
     },
-    [colors, currencySymbol, getDebtTotal, getAmountColor, handleDebtor],
+    [colors, formatAmount, getDebtTotal, getAmountColor, handleDebtor],
   );
 
   const ListEmpty = useCallback(() => (
@@ -113,7 +115,7 @@ const DebtorList: React.FC<DebtorListProps> = ({colors, debtors, allDebts, curre
         <Icon name="users" size={22} color={colors.secondaryText} />
       </View>
       <PrimaryText size={13} color={colors.secondaryText} style={gs.mt10}>
-        No one here yet
+        {t('debts.noOneHereYet')}
       </PrimaryText>
     </View>
   ), [colors]);

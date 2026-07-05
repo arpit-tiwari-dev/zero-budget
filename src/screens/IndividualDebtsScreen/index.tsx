@@ -1,14 +1,17 @@
 import {RefreshControl, TouchableOpacity, View} from 'react-native';
 import React, {useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import AppHeader from '../../components/atoms/AppHeader';
 import {goBack, navigate} from '../../utils/navigationUtils';
 import {useRoute} from '@react-navigation/native';
 import Icon from '../../components/atoms/Icons';
 import useIndividualDebts, {IndividualDebtsScreenRouteProp} from './useIndividualDebts';
+import useSwipeTutorial from '../../hooks/useSwipeTutorial';
+import SwipeTutorialTooltip from '../../components/atoms/SwipeTutorialTooltip';
 import PrimaryView from '../../components/atoms/PrimaryView';
 import PrimaryText from '../../components/atoms/PrimaryText';
 import DebtList from '../../components/molecules/DebtList';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {gs, hitSlop} from '../../styles/globalStyles';
 
 const IndividualDebtsScreen = () => {
@@ -22,7 +25,6 @@ const IndividualDebtsScreen = () => {
     onRefresh,
     handleEditDebt,
     handleDeleteDebt,
-    currencySymbol,
     handleDeleteDebtor,
     handleMarkAsPaid,
     handleUpdateDebtor,
@@ -31,9 +33,12 @@ const IndividualDebtsScreen = () => {
     totalBorrowings,
     totalLendings,
   } = useIndividualDebts(route);
+  const {t} = useTranslation();
+  const formatAmount = useFormatAmount();
 
   const [debtsType, setDebtsType] = useState('Borrow');
-
+  const currentDebts = debtsType === 'Borrow' ? sortedBorrowings : sortedLendings;
+  const {shouldShowTutorial, tutorialRef, dismissTutorial} = useSwipeTutorial({screen: 'debt', itemCount: currentDebts.length});
 
   const netColor = useMemo(() => {
     if (debtorTotal > 0) return colors.accentOrange;
@@ -42,10 +47,10 @@ const IndividualDebtsScreen = () => {
   }, [debtorTotal, colors]);
 
   const netLabel = useMemo(() => {
-    if (debtorTotal > 0) return 'You owe';
-    if (debtorTotal < 0) return 'Owes you';
-    return 'Settled';
-  }, [debtorTotal]);
+    if (debtorTotal > 0) return t('debts.youOwe');
+    if (debtorTotal < 0) return t('debts.owesYou');
+    return t('debts.settled');
+  }, [debtorTotal, t]);
 
   const ListHeader = useMemo(
     () => (
@@ -60,10 +65,10 @@ const IndividualDebtsScreen = () => {
               {backgroundColor: colors.accentOrange + '14'},
             ]}>
             <PrimaryText size={11} color={colors.accentOrange} style={gs.mb5}>
-              Borrowed
+              {t('debts.borrowed')}
             </PrimaryText>
             <PrimaryText size={18} weight="bold" variant="number" color={colors.accentOrange}>
-              {currencySymbol}{formatCurrency(totalBorrowings)}
+              {formatAmount(totalBorrowings)}
             </PrimaryText>
           </View>
           <View
@@ -75,10 +80,10 @@ const IndividualDebtsScreen = () => {
               {backgroundColor: colors.accentGreen + '14'},
             ]}>
             <PrimaryText size={11} color={colors.accentGreen} style={gs.mb5}>
-              Lent
+              {t('debts.lent')}
             </PrimaryText>
             <PrimaryText size={18} weight="bold" variant="number" color={colors.accentGreen}>
-              {currencySymbol}{formatCurrency(totalLendings)}
+              {formatAmount(totalLendings)}
             </PrimaryText>
           </View>
         </View>
@@ -87,7 +92,7 @@ const IndividualDebtsScreen = () => {
           <PrimaryText size={12} color={colors.secondaryText}>
             {netLabel}{' '}
             <PrimaryText size={12} weight="bold" variant="number" color={netColor}>
-              {currencySymbol}{formatCurrency(Math.abs(debtorTotal))}
+              {formatAmount(Math.abs(debtorTotal))}
             </PrimaryText>
           </PrimaryText>
 
@@ -124,7 +129,7 @@ const IndividualDebtsScreen = () => {
               size={13}
               weight="semibold"
               color={debtsType === 'Borrow' ? colors.buttonText : colors.secondaryText}>
-              Borrowed
+              {t('debts.borrowed')}
             </PrimaryText>
           </TouchableOpacity>
           <TouchableOpacity
@@ -140,13 +145,13 @@ const IndividualDebtsScreen = () => {
               size={13}
               weight="semibold"
               color={debtsType === 'Lend' ? colors.buttonText : colors.secondaryText}>
-              Lent
+              {t('debts.lent')}
             </PrimaryText>
           </TouchableOpacity>
         </View>
       </View>
     ),
-    [colors, currencySymbol, debtsType, debtorTotal, handleDeleteDebtor, handleMarkAsPaid, handleUpdateDebtor, netColor, netLabel, totalBorrowings, totalLendings],
+    [colors, formatAmount, debtsType, debtorTotal, handleDeleteDebtor, handleMarkAsPaid, handleUpdateDebtor, netColor, netLabel, totalBorrowings, totalLendings],
   );
 
   return (
@@ -154,21 +159,22 @@ const IndividualDebtsScreen = () => {
       <View style={[gs.px16, gs.mb15, gs.mt20]}>
         <AppHeader onPress={goBack} colors={colors} text={debtorName ?? ''} />
       </View>
+      {shouldShowTutorial && <SwipeTutorialTooltip onDismiss={dismissTutorial} />}
       <DebtList
         colors={colors}
         handleEditDebt={handleEditDebt}
         handleDeleteDebt={handleDeleteDebt}
-        individualDebts={debtsType === 'Borrow' ? sortedBorrowings : sortedLendings}
-        currencySymbol={currencySymbol}
+        individualDebts={currentDebts}
         ListHeaderComponent={ListHeader}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        tutorialSwipeRef={tutorialRef}
       />
-      <View style={[gs.absolute, gs.bottom15, gs.right15, gs.zIndex1]}>
+      <View style={[gs.absolute, {bottom: 60}, gs.right15, gs.zIndex1]}>
         <TouchableOpacity
           style={[gs.size50, gs.rounded8, gs.center, {backgroundColor: colors.secondaryBackground}]}
           onPress={() => navigate('AddDebtsScreen', {debtorId, debtorName})}
           hitSlop={hitSlop}
-          accessibilityLabel="Add new debt"
+          accessibilityLabel={t('debts.addDebt')}
           accessibilityRole="button">
           <Icon name="plus" size={30} color={colors.primaryText} />
         </TouchableOpacity>

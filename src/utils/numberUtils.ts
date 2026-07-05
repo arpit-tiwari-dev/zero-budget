@@ -1,3 +1,37 @@
+import {getFormatLocale, getDeviceLocaleInfo} from './locale';
+
+const LAKH_CURRENCIES = new Set([
+  'INR', 'BDT', 'NPR', 'PKR', 'LKR',
+]);
+
+const LAKH_COUNTRY_CODES = new Set([
+  'IN', 'BD', 'NP', 'PK', 'LK',
+]);
+
+/**
+ * Returns the correct locale for currency formatting.
+ * Prevents Indian lakh/crore grouping from leaking into non-South-Asian currencies.
+ *
+ * The lakh/crore pattern (1,24,000) is baked into the numbering system of
+ * South Asian LANGUAGES (hi, bn, ta, mr, pa, ne, etc.), not just country codes.
+ * So "hi-US" still gives lakh grouping. We must use "en-US" as the fallback
+ * to guarantee international grouping (groups of 3).
+ */
+const getEffectiveLocaleForCurrency = (currencyCode?: string): string => {
+  const deviceLocale = getFormatLocale();
+  if (!currencyCode) return deviceLocale;
+
+  const {countryCode} = getDeviceLocaleInfo();
+  const isLakhLocale = LAKH_COUNTRY_CODES.has(countryCode);
+  const isLakhCurrency = LAKH_CURRENCIES.has(currencyCode.toUpperCase());
+
+  if (isLakhLocale && !isLakhCurrency) {
+    return 'en-US';
+  }
+
+  return deviceLocale;
+};
+
 const CURRENCY_DECIMALS: Record<string, number> = {
   JPY: 0,
   KRW: 0,
@@ -41,7 +75,6 @@ const CURRENCY_DECIMALS: Record<string, number> = {
   JOD: 3,
 };
 
-// Cache for Intl.NumberFormat instances to avoid recreating them on every call
 const numberFormatCache = new Map<string, Intl.NumberFormat>();
 
 const getNumberFormatter = (
@@ -62,6 +95,10 @@ export const getCurrencyDecimals = (currencyCode?: string): number => {
   return CURRENCY_DECIMALS[currencyCode.toUpperCase()] ?? 2;
 };
 
+/**
+ * Formats a plain number with locale-aware grouping.
+ * Uses device locale by default (respects user's OS number format preference).
+ */
 export const formatNumber = (
   amount: number,
   options: {
@@ -71,7 +108,12 @@ export const formatNumber = (
     useGrouping?: boolean;
   } = {},
 ): string => {
-  const {locale = 'en-IN', minimumFractionDigits = 0, maximumFractionDigits = 2, useGrouping = true} = options;
+  const {
+    locale = getFormatLocale(),
+    minimumFractionDigits = 0,
+    maximumFractionDigits = 2,
+    useGrouping = true,
+  } = options;
 
   try {
     const formatter = getNumberFormatter(locale, {
@@ -85,16 +127,23 @@ export const formatNumber = (
   }
 };
 
-export const formatCurrency = (amount: number, currencyCode?: string, locale: string = 'en-IN'): string => {
+/**
+ * Formats an amount with locale-aware grouping and currency-specific decimals.
+ * Does NOT include symbol — use formatAmountWithSymbol for full currency display.
+ */
+export const formatCurrency = (amount: number, currencyCode?: string, locale?: string): string => {
+  const effectiveLocale = locale ?? getEffectiveLocaleForCurrency(currencyCode);
   const maxDecimals = getCurrencyDecimals(currencyCode);
 
   if (!Number.isFinite(amount)) return '0';
 
   const isWholeNumber = Number.isInteger(amount);
-  const minDecimals = isWholeNumber ? 0 : maxDecimals;
+  const minDecimals = maxDecimals === 3
+    ? 3
+    : isWholeNumber ? 0 : Math.min(2, maxDecimals);
 
   try {
-    const formatter = getNumberFormatter(locale, {
+    const formatter = getNumberFormatter(effectiveLocale, {
       minimumFractionDigits: minDecimals,
       maximumFractionDigits: maxDecimals,
       useGrouping: true,
@@ -108,21 +157,81 @@ export const formatCurrency = (amount: number, currencyCode?: string, locale: st
   }
 };
 
+/**
+ * Formats a full currency string with correct symbol placement per locale.
+ * Handles prefix ($ before) vs suffix (₽ after) automatically.
+ *
+ * Examples:
+ *   en-US + USD → "$124,000"
+ *   ru-RU + RUB → "124 000 ₽"
+ *   hu-HU + HUF → "124 000 Ft"
+ *   en-IN + INR → "₹1,24,000"
+ *   de-DE + EUR → "124.000 €"
+ */
+export const formatAmountWithSymbol = (
+  amount: number,
+  currencyCode: string,
+  locale?: string,
+): string => {
+  const effectiveLocale = locale ?? getEffectiveLocaleForCurrency(currencyCode);
+
+  if (!Number.isFinite(amount)) return '0';
+
+  const maxDecimals = getCurrencyDecimals(currencyCode);
+  const isWholeNumber = Number.isInteger(amount);
+  const minDecimals = maxDecimals === 3
+    ? 3
+    : isWholeNumber ? 0 : Math.min(2, maxDecimals);
+
+  try {
+    const formatter = getNumberFormatter(effectiveLocale, {
+      style: 'currency',
+      currency: currencyCode,
+      currencyDisplay: 'narrowSymbol',
+      minimumFractionDigits: minDecimals,
+      maximumFractionDigits: maxDecimals,
+    });
+    return formatter.format(amount);
+  } catch {
+    // Fallback: narrowSymbol not supported for this currency, try symbol
+    try {
+      const fallbackFormatter = getNumberFormatter(effectiveLocale, {
+        style: 'currency',
+        currency: currencyCode,
+        currencyDisplay: 'symbol',
+        minimumFractionDigits: minDecimals,
+        maximumFractionDigits: maxDecimals,
+      });
+      return fallbackFormatter.format(amount);
+    } catch {
+      return `${currencyCode} ${formatCurrency(amount, currencyCode, effectiveLocale)}`;
+    }
+  }
+};
+
+/**
+ * @deprecated Use formatAmountWithSymbol instead for correct locale-aware placement.
+ * Kept for backward compatibility during migration.
+ */
 export const formatWithSymbol = (
   amount: number,
   symbol: string,
   currencyCode?: string,
-  locale: string = 'en-IN',
+  locale?: string,
 ): string => {
+  if (currencyCode) {
+    return formatAmountWithSymbol(amount, currencyCode, locale);
+  }
   const formattedAmount = formatCurrency(amount, currencyCode, locale);
   return `${symbol}${formattedAmount}`;
 };
 
-export const formatCompact = (amount: number, locale: string = 'en'): string => {
+export const formatCompact = (amount: number, locale?: string): string => {
+  const effectiveLocale = locale ?? getFormatLocale();
   if (!Number.isFinite(amount)) return '0';
 
   try {
-    const formatter = getNumberFormatter(locale, {
+    const formatter = getNumberFormatter(effectiveLocale, {
       notation: 'compact',
       compactDisplay: 'short',
       maximumFractionDigits: 1,

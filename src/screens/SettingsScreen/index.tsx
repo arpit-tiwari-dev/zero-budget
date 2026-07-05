@@ -1,5 +1,7 @@
-import {ScrollView, Text, TouchableOpacity, View, Platform, Share} from 'react-native';
+import {ScrollView, TouchableOpacity, View, Platform, Share} from 'react-native';
 import React, {useCallback} from 'react';
+import {useTranslation} from 'react-i18next';
+import i18n from '../../i18n';
 import Icon from '../../components/atoms/Icons';
 import {goBack} from '../../utils/navigationUtils';
 import useSettings from './useSettings';
@@ -10,6 +12,7 @@ import {generateUniqueKey, requestStoragePermission} from '../../utils/dataUtils
 import {getTimestamp} from '../../utils/dateUtils';
 import {CURRENT_EXPORT_VERSION} from '../../backend/export/format';
 import {SheetManager} from 'react-native-actions-sheet';
+import {setLocaleOverride} from '../../utils/locale';
 import {Colors} from '../../hooks/useThemeColors';
 import {gs, hitSlop} from '../../styles/globalStyles';
 
@@ -48,6 +51,7 @@ const SettingsRow: React.FC<SettingsRowProps> = ({icon, label, subtitle, value, 
 );
 
 const SettingsScreen = () => {
+  const {t} = useTranslation();
   const {
     appVersion,
     colors,
@@ -98,7 +102,7 @@ const SettingsScreen = () => {
 
         await Share.share({
           url: `file://${path}`,
-          title: 'Export Zero Data',
+          title: t('settings.exportShareTitle'),
         });
 
         handleExportResult(true);
@@ -140,7 +144,7 @@ const SettingsScreen = () => {
         <TouchableOpacity onPress={() => goBack()} hitSlop={hitSlop}>
           <Icon name="arrow-left" size={22} color={colors.primaryText} />
         </TouchableOpacity>
-        <PrimaryText size={22} weight="semibold">Settings</PrimaryText>
+        <PrimaryText size={22} weight="semibold">{t('settings.title')}</PrimaryText>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={gs.pb80}>
         <PrimaryText
@@ -148,21 +152,21 @@ const SettingsScreen = () => {
           weight="semibold"
           color={colors.accentGreen}
           style={[gs.mt20, gs.mb6, {letterSpacing: 0.8}]}>
-          PERSONALIZATION
+          {t('settings.sectionPersonalization')}
         </PrimaryText>
         <View style={[gs.rounded12, gs.overflowHidden, {backgroundColor: colors.containerColor}]}>
           <SettingsRow
             colors={colors}
             icon="sun-moon"
-            label="Theme"
-            value={selectedTheme.charAt(0).toUpperCase() + selectedTheme.slice(1)}
+            label={t('settings.theme')}
+            value={selectedTheme === 'light' ? t('settings.themeLight') : selectedTheme === 'dark' ? t('settings.themeDark') : t('settings.themeSystem')}
             onPress={openThemePicker}
           />
           <View style={[gs.mx16, {height: 1, backgroundColor: colors.secondaryAccent}]} />
           <SettingsRow
             colors={colors}
             icon="user"
-            label="Name"
+            label={t('settings.name')}
             value={userName}
             onPress={() => {
               void SheetManager.show('change-name-sheet', {
@@ -179,7 +183,7 @@ const SettingsScreen = () => {
           <SettingsRow
             colors={colors}
             icon="banknote"
-            label="Currency"
+            label={t('settings.currency')}
             onPress={handleOpenCurrencySheet}
             valueNode={
               <View style={gs.itemsEnd}>
@@ -188,6 +192,23 @@ const SettingsScreen = () => {
               </View>
             }
           />
+          <View style={[gs.mx16, {height: 1, backgroundColor: colors.secondaryAccent}]} />
+          <SettingsRow
+            colors={colors}
+            icon="globe"
+            label={t('settings.language')}
+            value="English"
+            onPress={() => {
+              void SheetManager.show('language-picker-sheet', {
+                payload: {
+                  currentLanguage: i18n.language,
+                  onSelect: (lang: string) => {
+                    setLocaleOverride(lang === 'en' ? null : lang);
+                  },
+                },
+              });
+            }}
+          />
         </View>
 
         <PrimaryText
@@ -195,23 +216,23 @@ const SettingsScreen = () => {
           weight="semibold"
           color={colors.accentGreen}
           style={[gs.mt20, gs.mb6, {letterSpacing: 0.8}]}>
-          YOUR DATA
+          {t('settings.sectionData')}
         </PrimaryText>
         <View style={[gs.rounded12, gs.overflowHidden, {backgroundColor: colors.containerColor}]}>
           <SettingsRow
             colors={colors}
             icon="download"
-            label="Export data"
-            subtitle="Import on a new device later"
+            label={t('settings.exportData')}
+            subtitle={t('settings.exportSubtitle')}
             onPress={() => exportData(allData)}
           />
           <View style={[gs.mx16, {height: 1, backgroundColor: colors.secondaryAccent}]} />
           <SettingsRow
             colors={colors}
             icon="trash-2"
-            label="Delete all data"
-            subtitle="This action cannot be undone"
-            onPress={handleDeleteAllData}
+            label={t('settings.deleteAllData')}
+            subtitle={t('settings.deleteSubtitle')}
+            onPress={() => handleDeleteAllData(() => exportData(allData))}
             destructive
           />
         </View>
@@ -221,61 +242,61 @@ const SettingsScreen = () => {
           weight="semibold"
           color={colors.accentGreen}
           style={[gs.mt20, gs.mb6, {letterSpacing: 0.8}]}>
-          ABOUT
+          {t('settings.sectionAbout')}
         </PrimaryText>
         <View style={[gs.rounded12, gs.overflowHidden, {backgroundColor: colors.containerColor}]}>
           <SettingsRow
             colors={colors}
             icon="bug"
-            label="Report a bug"
-            subtitle="Found an issue? Let us know"
+            label={t('settings.reportBug')}
+            subtitle={t('settings.reportBugSubtitle')}
             onPress={handleReportBug}
           />
           <View style={[gs.mx16, {height: 1, backgroundColor: colors.secondaryAccent}]} />
           <SettingsRow
             colors={colors}
             icon="star"
-            label="Rate the app"
-            subtitle="Enjoying zero? Your feedback helps!"
+            label={t('settings.rateApp')}
+            subtitle={t('settings.rateAppSubtitle')}
             onPress={handleRateNow}
           />
           <View style={[gs.mx16, {height: 1, backgroundColor: colors.secondaryAccent}]} />
           <SettingsRow
             colors={colors}
             icon="code"
-            label="Source code"
-            subtitle="Explore on GitHub"
+            label={t('settings.sourceCode')}
+            subtitle={t('settings.sourceCodeSubtitle')}
             onPress={handleGithub}
           />
           <View style={[gs.mx16, {height: 1, backgroundColor: colors.secondaryAccent}]} />
           <SettingsRow
             colors={colors}
             icon="shield"
-            label="Privacy Policy"
+            label={t('settings.privacyPolicy')}
             onPress={handlePrivacyPolicy}
           />
           <View style={[gs.mx16, {height: 1, backgroundColor: colors.secondaryAccent}]} />
           <SettingsRow
             colors={colors}
             icon="file-text"
-            label="Terms & Conditions"
+            label={t('settings.termsAndConditions')}
             onPress={handleTermsAndConditions}
           />
           <View style={[gs.mx16, {height: 1, backgroundColor: colors.secondaryAccent}]} />
           <SettingsRow
             colors={colors}
             icon="info"
-            label="Version"
+            label={t('settings.version')}
             value={`v${appVersion}`}
           />
         </View>
 
         <View style={[gs.mt20, gs.mb10, gs.center, gs.gap2]}>
           <PrimaryText size={11} color={colors.secondaryText}>
-            Embrace the simplicity of zero
+            {t('settings.footerTagline')}
           </PrimaryText>
           <PrimaryText size={11} color={colors.secondaryText}>
-            Made with <Text style={{color: colors.accentGreen}}>passion</Text> in India
+            {t('settings.footerMadeWith')}
           </PrimaryText>
         </View>
       </ScrollView>

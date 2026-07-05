@@ -1,5 +1,6 @@
 import {ScrollView, View} from 'react-native';
 import React, {useCallback, useState, memo} from 'react';
+import {useTranslation} from 'react-i18next';
 import PrimaryView from '../atoms/PrimaryView';
 import {goBack} from '../../utils/navigationUtils';
 import useThemeColors from '../../hooks/useThemeColors';
@@ -30,6 +31,7 @@ interface DebtorEntryProps {
 }
 
 const DebtorEntry: React.FC<DebtorEntryProps> = ({type, route}) => {
+  const {t} = useTranslation();
   const colors = useThemeColors();
   const debtorData = route?.params;
   const isAddButton = type === 'Add';
@@ -93,10 +95,10 @@ const DebtorEntry: React.FC<DebtorEntryProps> = ({type, route}) => {
     <PrimaryView colors={colors} style={gs.justifyBetween} dismissKeyboardOnTouch>
       <View>
         <View style={[gs.mb20, gs.mt20]}>
-          <AppHeader onPress={goBack} colors={colors} text={isAddButton ? 'Add Person' : 'Edit Person'} />
+          <AppHeader onPress={goBack} colors={colors} text={isAddButton ? t('debtor.addTitle') : t('debtor.editTitle')} />
         </View>
 
-        <PrimaryText size={12} color={colors.secondaryText} style={gs.mb8}>Type</PrimaryText>
+        <PrimaryText size={12} color={colors.secondaryText} style={gs.mb8}>{t('debtor.typeLabel')}</PrimaryText>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={gs.mb15}>
           <CategoryContainer
             categories={debtCategories}
@@ -110,15 +112,15 @@ const DebtorEntry: React.FC<DebtorEntryProps> = ({type, route}) => {
           colors={colors}
           input={debtorTitle}
           setInput={setDebtorTitle}
-          placeholder="eg. John Doe or Axis"
-          label="Name"
+          placeholder={t('debtor.namePlaceholder')}
+          label={t('debtor.nameLabel')}
           schema={nameSchema}
         />
       </View>
       <PrimaryButton
         onPress={isAddButton ? handleAddDebtor : handleUpdateDebtor}
         colors={colors}
-        buttonTitle={isAddButton ? 'Add' : 'Update'}
+        buttonTitle={isAddButton ? t('common.add') : t('common.update')}
         disabled={!isValid}
       />
     </PrimaryView>

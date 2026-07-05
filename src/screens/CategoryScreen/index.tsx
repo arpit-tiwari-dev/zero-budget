@@ -1,12 +1,16 @@
 import {RefreshControl, View} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import React, {useCallback, useRef, memo} from 'react';
+import {useTranslation} from 'react-i18next';
 import Animated, {SharedValue, useAnimatedStyle, interpolate} from 'react-native-reanimated';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import type {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import {navigate} from '../../utils/navigationUtils';
 import Icon from '../../components/atoms/Icons';
 import HeaderContainer from '../../components/molecules/HeaderContainer';
 import useCategory from './useCategory';
+import useSwipeTutorial from '../../hooks/useSwipeTutorial';
+import SwipeTutorialTooltip from '../../components/atoms/SwipeTutorialTooltip';
 import PrimaryView from '../../components/atoms/PrimaryView';
 import PrimaryText from '../../components/atoms/PrimaryText';
 import {CategoryData as Category} from '../../watermelondb/services';
@@ -53,26 +57,30 @@ const CategoryRow = memo(({
   onEdit,
   onDelete,
   openSwipeableRef,
+  tutorialSwipeRef,
 }: {
   category: Category;
   colors: Colors;
   onEdit: (id: string, name: string, icon: string, color: string) => void;
   onDelete: (id: string) => void;
   openSwipeableRef: React.RefObject<{close: () => void} | null>;
+  tutorialSwipeRef?: React.RefObject<SwipeableMethods | null>;
 }) => {
-  const swipeableRef = useRef<any>(null);
+  const swipeableRef = useRef<SwipeableMethods | null>(null);
+
+  const combinedRef = tutorialSwipeRef ?? swipeableRef;
 
   const handleSwipeWillOpen = useCallback(() => {
-    if (openSwipeableRef.current && openSwipeableRef.current !== swipeableRef.current) {
+    if (openSwipeableRef.current && openSwipeableRef.current !== combinedRef.current) {
       openSwipeableRef.current.close();
     }
-    openSwipeableRef.current = swipeableRef.current;
-  }, [openSwipeableRef]);
+    openSwipeableRef.current = combinedRef.current;
+  }, [openSwipeableRef, combinedRef]);
 
   return (
     <View style={gs.mb5}>
       <ReanimatedSwipeable
-        ref={swipeableRef}
+        ref={combinedRef}
         renderLeftActions={(progress, _translation, swipeableMethods) => (
           <SwipeAction
             progress={progress}
@@ -130,19 +138,22 @@ const CategoryRow = memo(({
 
 const CategoryScreen = () => {
   const {colors, refreshing, onRefresh, categories, handleEdit, handleDelete} = useCategory();
+  const {t} = useTranslation();
   const openSwipeableRef = useRef<{close: () => void} | null>(null);
+  const {shouldShowTutorial, tutorialRef, dismissTutorial} = useSwipeTutorial({screen: 'category', itemCount: categories.length});
 
   const renderCategoryItem = useCallback(
-    ({item: category}: {item: Category}) => (
+    ({item: category, index}: {item: Category; index: number}) => (
       <CategoryRow
         category={category}
         colors={colors}
         onEdit={handleEdit}
         onDelete={handleDelete}
         openSwipeableRef={openSwipeableRef}
+        tutorialSwipeRef={index === 0 ? tutorialRef : undefined}
       />
     ),
-    [colors, handleEdit, handleDelete],
+    [colors, handleEdit, handleDelete, tutorialRef],
   );
 
   const ListEmptyComponent = useCallback(
@@ -154,8 +165,9 @@ const CategoryScreen = () => {
     <>
       <PrimaryView colors={colors} useSidePadding={false} useBottomPadding={false}>
         <View style={[gs.mb15, gs.px16]}>
-          <HeaderContainer headerText={'Categories'} />
+          <HeaderContainer headerText={t('categories.title')} />
         </View>
+        {shouldShowTutorial && <SwipeTutorialTooltip onDismiss={dismissTutorial} />}
         <View style={gs.flex1}>
           <FlashList
             data={categories}
@@ -173,7 +185,7 @@ const CategoryScreen = () => {
           style={[gs.size50, gs.roundedFull, gs.center, {backgroundColor: colors.primaryText}]}
           onPress={() => navigate('AddCategoryScreen')}
           hitSlop={hitSlop}
-          accessibilityLabel="Add new category"
+          accessibilityLabel={t('categories.addCategory')}
           accessibilityRole="button">
           <Icon name="plus" size={24} color={colors.buttonText} />
         </TouchableOpacity>

@@ -1,5 +1,6 @@
 import {Platform, TouchableOpacity, View} from 'react-native';
 import React, {useState, useCallback, memo} from 'react';
+import {useTranslation} from 'react-i18next';
 import {SheetManager, SheetProps} from 'react-native-actions-sheet';
 import DateTimePicker, {DateTimePickerEvent} from '@react-native-community/datetimepicker';
 import {CustomBottomSheet} from '../components/atoms/CustomBottomSheet';
@@ -8,6 +9,7 @@ import PrimaryText from '../components/atoms/PrimaryText';
 import {gs} from '../styles/globalStyles';
 
 const DatePickerSheet: React.FC<SheetProps<'date-picker-sheet'>> = props => {
+  const {t} = useTranslation();
   const colors = useThemeColors();
   const initialDate = props.payload?.selectedDate ? new Date(props.payload.selectedDate) : new Date();
   const [tempDate, setTempDate] = useState(initialDate);
@@ -35,10 +37,10 @@ const DatePickerSheet: React.FC<SheetProps<'date-picker-sheet'>> = props => {
       <View style={gs.pb20}>
         <View style={[gs.rowBetween, gs.px20, gs.py10]}>
           <TouchableOpacity onPress={handleCancel} style={gs.p5}>
-            <PrimaryText color={colors.accentRed}>Cancel</PrimaryText>
+            <PrimaryText color={colors.accentRed}>{t('common.cancel')}</PrimaryText>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleConfirm} style={gs.p5}>
-            <PrimaryText color={colors.accentGreen}>Done</PrimaryText>
+            <PrimaryText color={colors.accentGreen}>{t('common.done')}</PrimaryText>
           </TouchableOpacity>
         </View>
 

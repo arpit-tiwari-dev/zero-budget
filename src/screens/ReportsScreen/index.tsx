@@ -1,5 +1,6 @@
 import {ScrollView, TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useMemo} from 'react';
+import {useTranslation} from 'react-i18next';
 import {PieChart} from 'react-native-svg-charts';
 import HeaderContainer from '../../components/molecules/HeaderContainer';
 import {getFirstDayOfMonth, formatDate, getMonthIndex, getMonthNumber} from '../../utils/dateUtils';
@@ -10,7 +11,7 @@ import PrimaryText from '../../components/atoms/PrimaryText';
 import PieChartLabels from '../../components/atoms/PieChartLabels';
 import {ExpenseData as Expense} from '../../watermelondb/services';
 import EmptyState from '../../components/atoms/EmptyState';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {SheetManager} from 'react-native-actions-sheet';
 import Icon from '../../components/atoms/Icons';
 import {gs} from '../../styles/globalStyles';
@@ -21,13 +22,14 @@ const ReportsScreen = () => {
     selectedYear,
     selectedMonth,
     filteredTransactions,
-    currencySymbol,
     dayNames,
     availableYears,
     handleMonthYearSelect,
     totalAmountForMonth,
     daysInMonth,
   } = useReports();
+  const {t} = useTranslation();
+  const formatAmount = useFormatAmount();
 
   const openMonthPicker = useCallback(() => {
     const monthIndex = getMonthIndex(selectedMonth);
@@ -53,7 +55,7 @@ const ReportsScreen = () => {
 
     filteredTransactions?.forEach((transaction: any) => {
       const {amount, category} = transaction;
-      const categoryName = category?.name ?? 'Unknown';
+      const categoryName = category?.name ?? t('common.unknown');
       const categoryColor = category?.color ?? '#808080';
 
       if (categoryMap.has(categoryName)) {
@@ -71,11 +73,11 @@ const ReportsScreen = () => {
       key: item.category.name,
       value: item.amount,
       svg: {fill: item.category.color ?? '#808080', onPress: () => {}},
-      label: `${item.category.name}: ${currencySymbol} ${item.amount}`,
+      label: `${item.category.name}: ${formatAmount(item.amount)}`,
       categoryId: item.category.id,
       categoryIcon: item.category.icon,
     }));
-  }, [filteredTransactions, currencySymbol]);
+  }, [filteredTransactions, formatAmount]);
 
   const handleCategoryPress = useCallback(
     (categoryId: string, categoryName: string, categoryColor: string, categoryIcon?: string) => {
@@ -98,12 +100,11 @@ const ReportsScreen = () => {
         <PieChartLabels
           slices={pieChartData}
           colors={colors}
-          currencySymbol={currencySymbol}
           onCategoryPress={handleCategoryPress}
         />
       </View>
     );
-  }, [pieChartData, colors, currencySymbol, handleCategoryPress]);
+  }, [pieChartData, colors, handleCategoryPress]);
 
   const {transactionsByDay, maxDayAmount} = useMemo(() => {
     const byDay = new Map<string, {total: number; count: number}>();
@@ -221,7 +222,7 @@ const ReportsScreen = () => {
 
   return (
     <PrimaryView colors={colors} useBottomPadding={false}>
-      <HeaderContainer headerText={'Reports'} />
+      <HeaderContainer headerText={t('reports.title')} />
       <View style={[gs.row, gs.wFull, gs.justifyBetween, gs.gap6, gs.mt10]}>
         <TouchableOpacity
           onPress={openMonthPicker}
@@ -233,15 +234,15 @@ const ReportsScreen = () => {
           <Icon name="chevron-down" size={14} color={colors.buttonText} />
         </TouchableOpacity>
         <View style={[gs.flex1, gs.px12, gs.py10, gs.rounded8, {backgroundColor: colors.secondaryAccent}]}>
-          <PrimaryText size={11} color={colors.secondaryText}>Total</PrimaryText>
+          <PrimaryText size={11} color={colors.secondaryText}>{t('reports.total')}</PrimaryText>
           <PrimaryText size={14} weight="semibold" variant="number" numberOfLines={1}>
-            {currencySymbol}{formatCurrency(totalAmountForMonth)}
+            {formatAmount(totalAmountForMonth)}
           </PrimaryText>
         </View>
         <View style={[gs.flex1, gs.px12, gs.py10, gs.rounded8, {backgroundColor: colors.secondaryAccent}]}>
-          <PrimaryText size={11} color={colors.secondaryText}>Avg/Day</PrimaryText>
+          <PrimaryText size={11} color={colors.secondaryText}>{t('reports.avgPerDay')}</PrimaryText>
           <PrimaryText size={14} weight="semibold" variant="number" numberOfLines={1}>
-            {currencySymbol}{formatCurrency(totalAmountForMonth / daysInMonth)}
+            {formatAmount(totalAmountForMonth / daysInMonth)}
           </PrimaryText>
         </View>
       </View>
@@ -261,7 +262,7 @@ const ReportsScreen = () => {
             <View style={[gs.row, gs.wrap]}>{renderCalendar()}</View>
 
             <View style={[gs.rowCenter, gs.justifyCenter, gs.mt10, gs.mb10, gs.gap4]}>
-              <PrimaryText size={11} color={colors.secondaryText}>Less</PrimaryText>
+              <PrimaryText size={11} color={colors.secondaryText}>{t('reports.less')}</PrimaryText>
               {[0.1, 0.3, 0.5, 0.75, 1].map((opacity, i) => (
                 <View
                   key={`legend-${i}`}
@@ -273,7 +274,7 @@ const ReportsScreen = () => {
                   ]}
                 />
               ))}
-              <PrimaryText size={11} color={colors.secondaryText}>More</PrimaryText>
+              <PrimaryText size={11} color={colors.secondaryText}>{t('reports.more')}</PrimaryText>
             </View>
 
             <View style={[gs.mt20, gs.mb20]}>{renderPieChart()}</View>

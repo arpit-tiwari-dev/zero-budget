@@ -2,17 +2,19 @@ import {RefreshControl, View} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import React, {useCallback, useMemo, useRef, memo} from 'react';
 import Animated, {SharedValue, useAnimatedStyle, interpolate} from 'react-native-reanimated';
+import {useTranslation} from 'react-i18next';
 import useThemeColors, {Colors} from '../../hooks/useThemeColors';
 import Icon from '../atoms/Icons';
 import {formatDate, formatCalendar} from '../../utils/dateUtils';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import type {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import {navigate} from '../../utils/navigationUtils';
 import {deleteExpenseById, ExpenseData as ExpenseDocType} from '../../watermelondb/services';
 import {useDispatch} from 'react-redux';
 import {fetchExpenses, fetchExpensesByMonth, invalidateExpenseCache} from '../../redux/slice/expenseDataSlice';
 import PrimaryText from '../atoms/PrimaryText';
 import {fetchEverydayExpenses} from '../../redux/slice/everydayExpenseDataSlice';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {FlashList, useRecyclingState} from '@shopify/flash-list';
 import {AppDispatch} from '../../redux/store';
 import {gs} from '../../styles/globalStyles';
@@ -29,7 +31,6 @@ interface Expense extends ExpenseDocType {
 }
 
 interface TransactionListProps {
-  currencySymbol: string;
   allExpenses: Array<Expense>;
   targetDate?: string;
   targetMonth?: string;
@@ -39,10 +40,10 @@ interface TransactionListProps {
   refreshing?: boolean;
   onRefresh?: () => void;
   contentContainerStyle?: {paddingBottom?: number};
+  tutorialSwipeRef?: React.RefObject<SwipeableMethods | null>;
 }
 
 interface TransactionItemProps {
-  currencySymbol: string;
   expense?: Array<Expense>;
   colors: Colors;
   dispatch: AppDispatch;
@@ -51,16 +52,18 @@ interface TransactionItemProps {
   targetMonth?: string;
   openSwipeableRef: React.RefObject<{close: () => void} | null>;
   edgeToEdge: boolean;
+  tutorialSwipeRef?: React.RefObject<SwipeableMethods | null>;
+  isFirstGroup?: boolean;
 }
 
 interface ExpenseRowProps {
   expense: Expense;
   colors: Colors;
-  currencySymbol: string;
   onEdit: (expense: Expense) => void;
   onDelete: (expenseId: string) => void;
   openSwipeableRef: React.RefObject<{close: () => void} | null>;
   edgeToEdge: boolean;
+  tutorialSwipeRef?: React.RefObject<SwipeableMethods | null>;
 }
 
 interface GroupedExpense {
@@ -117,20 +120,23 @@ const SwipeAction = ({
 };
 
 const ExpenseRow: React.FC<ExpenseRowProps> = React.memo(
-  ({expense, colors, currencySymbol, onEdit, onDelete, openSwipeableRef, edgeToEdge}) => {
-    const swipeableRef = useRef<any>(null);
+  ({expense, colors, onEdit, onDelete, openSwipeableRef, edgeToEdge, tutorialSwipeRef}) => {
+    const swipeableRef = useRef<SwipeableMethods | null>(null);
+    const formatAmount = useFormatAmount();
+
+    const combinedRef = tutorialSwipeRef ?? swipeableRef;
 
     const handleSwipeWillOpen = useCallback(() => {
-      if (openSwipeableRef.current && openSwipeableRef.current !== swipeableRef.current) {
+      if (openSwipeableRef.current && openSwipeableRef.current !== combinedRef.current) {
         openSwipeableRef.current.close();
       }
-      openSwipeableRef.current = swipeableRef.current;
-    }, [openSwipeableRef]);
+      openSwipeableRef.current = combinedRef.current;
+    }, [openSwipeableRef, combinedRef]);
 
     return (
       <View style={gs.mb5}>
         <ReanimatedSwipeable
-          ref={swipeableRef}
+          ref={combinedRef}
           renderLeftActions={(progress, _translation, swipeableMethods) => (
             <SwipeAction
               progress={progress}
@@ -193,10 +199,7 @@ const ExpenseRow: React.FC<ExpenseRowProps> = React.memo(
             </View>
             <View style={gs.ml10}>
               <PrimaryText size={14} weight="semibold" variant="number">
-                {currencySymbol}
-                {Number.isInteger(expense.amount)
-                  ? formatCurrency(expense.amount)
-                  : formatCurrency(Number(expense.amount.toFixed(2)))}
+                {formatAmount(expense.amount)}
               </PrimaryText>
             </View>
           </View>
@@ -210,34 +213,37 @@ const InlineUndo: React.FC<{
   colors: Colors;
   onUndo: () => void;
   edgeToEdge: boolean;
-}> = memo(({colors, onUndo, edgeToEdge}) => (
-  <View style={gs.mb5}>
-    <View
-      style={[
-        gs.rounded12,
-        gs.rowBetweenCenter,
-        gs.px14,
-        gs.py12,
-        edgeToEdge && gs.mx16,
-        {backgroundColor: colors.secondaryAccent},
-      ]}>
-      <PrimaryText size={13} color={colors.secondaryText}>
-        Transaction deleted
-      </PrimaryText>
-      <TouchableOpacity
-        onPress={onUndo}
-        activeOpacity={0.7}
-        style={[gs.py8, gs.px14, gs.rounded10, {backgroundColor: colors.accentGreen}]}>
-        <PrimaryText size={12} weight="semibold" color={colors.buttonText}>
-          Undo
+}> = memo(({colors, onUndo, edgeToEdge}) => {
+  const {t} = useTranslation();
+  return (
+    <View style={gs.mb5}>
+      <View
+        style={[
+          gs.rounded12,
+          gs.rowBetweenCenter,
+          gs.px14,
+          gs.py12,
+          edgeToEdge && gs.mx16,
+          {backgroundColor: colors.secondaryAccent},
+        ]}>
+        <PrimaryText size={13} color={colors.secondaryText}>
+          {t('transaction.deleted')}
         </PrimaryText>
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={onUndo}
+          activeOpacity={0.7}
+          style={[gs.py8, gs.px14, gs.rounded10, {backgroundColor: colors.accentGreen}]}>
+          <PrimaryText size={12} weight="semibold" color={colors.buttonText}>
+            {t('common.undo')}
+          </PrimaryText>
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
-));
+  );
+});
 
 const TransactionItem: React.FC<TransactionItemProps> = React.memo(
-  ({currencySymbol, expense: initialExpense, colors, dispatch, label, targetDate, targetMonth, openSwipeableRef, edgeToEdge}) => {
+  ({expense: initialExpense, colors, dispatch, label, targetDate, targetMonth, openSwipeableRef, edgeToEdge, tutorialSwipeRef, isFirstGroup}) => {
     const deletionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const [expenses, setExpenses] = useRecyclingState<Array<Expense>>(initialExpense || [], [initialExpense], () => {
@@ -302,7 +308,7 @@ const TransactionItem: React.FC<TransactionItemProps> = React.memo(
         <PrimaryText size={12} weight="semibold" color={colors.secondaryText} style={[gs.mb8, gs.mt15, edgeToEdge && gs.px16]}>
           {label}
         </PrimaryText>
-        {expenses.map(item =>
+        {expenses.map((item, index) =>
           String(item.id) === deletedItemId ? (
             <InlineUndo key={String(item.id)} colors={colors} onUndo={handleUndo} edgeToEdge={edgeToEdge} />
           ) : (
@@ -310,11 +316,11 @@ const TransactionItem: React.FC<TransactionItemProps> = React.memo(
               key={String(item.id)}
               expense={item}
               colors={colors}
-              currencySymbol={currencySymbol}
               onEdit={handleEdit}
               onDelete={handleDelete}
               openSwipeableRef={openSwipeableRef}
               edgeToEdge={edgeToEdge}
+              tutorialSwipeRef={isFirstGroup && index === 0 ? tutorialSwipeRef : undefined}
             />
           ),
         )}
@@ -324,7 +330,6 @@ const TransactionItem: React.FC<TransactionItemProps> = React.memo(
 );
 
 const TransactionList: React.FC<TransactionListProps> = ({
-  currencySymbol,
   allExpenses,
   targetDate,
   targetMonth,
@@ -334,6 +339,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   refreshing,
   onRefresh,
   contentContainerStyle,
+  tutorialSwipeRef,
 }) => {
   const colors = useThemeColors();
   const dispatch = useDispatch<AppDispatch>();
@@ -363,9 +369,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
   }, [allExpenses]);
 
   const renderGroupItem = useCallback(
-    ({item}: {item: GroupedExpense}) => (
+    ({item, index}: {item: GroupedExpense; index: number}) => (
       <TransactionItem
-        currencySymbol={currencySymbol}
         expense={item.expenses}
         colors={colors}
         dispatch={dispatch}
@@ -374,9 +379,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
         label={item.label}
         openSwipeableRef={openSwipeableRef}
         edgeToEdge={edgeToEdge}
+        tutorialSwipeRef={index === 0 ? tutorialSwipeRef : undefined}
+        isFirstGroup={index === 0}
       />
     ),
-    [currencySymbol, colors, dispatch, targetDate, targetMonth, edgeToEdge],
+    [colors, dispatch, targetDate, targetMonth, edgeToEdge, tutorialSwipeRef],
   );
 
   const refreshControl = useMemo(

@@ -1,5 +1,6 @@
 import {ScrollView, TextInput, View} from 'react-native';
 import React, {useCallback, useEffect, useState, memo} from 'react';
+import {useTranslation} from 'react-i18next';
 import PrimaryView from '../atoms/PrimaryView';
 import AppHeader from '../atoms/AppHeader';
 import CustomInput from '../atoms/CustomInput';
@@ -28,6 +29,7 @@ interface ExpenseEntryProps {
 }
 
 const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
+  const {t} = useTranslation();
   const expenseData = route?.params;
   const isAddButton = type === 'Add';
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -143,27 +145,27 @@ const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
   return (
     <PrimaryView colors={colors} dismissKeyboardOnTouch>
       <View style={[gs.mb20, gs.mt20]}>
-        <AppHeader onPress={() => goBack()} colors={colors} text={isAddButton ? 'Add Transaction' : 'Edit Transaction'} />
+        <AppHeader onPress={() => goBack()} colors={colors} text={isAddButton ? t('transaction.addTitle') : t('transaction.editTitle')} />
       </View>
 
       <CustomInput
         colors={colors}
         input={expenseTitle}
         setInput={setExpenseTitle}
-        placeholder="eg. Biryani"
-        label="Title"
+        placeholder={t('transaction.titlePlaceholder')}
+        label={t('transaction.titleLabel')}
         schema={expenseSchema}
       />
       <CustomInput
         colors={colors}
         input={expenseDescription}
         setInput={setExpenseDescription}
-        placeholder="eg. From Aroma's"
-        label="Description"
+        placeholder={t('transaction.descriptionPlaceholder')}
+        label={t('transaction.descriptionLabel')}
         schema={expenseDescriptionSchema}
       />
 
-      <PrimaryText size={12} color={colors.secondaryText} style={gs.mb5}>Amount</PrimaryText>
+      <PrimaryText size={12} color={colors.secondaryText} style={gs.mb5}>{t('transaction.amountLabel')}</PrimaryText>
       <View
         style={[
           gs.h48,
@@ -205,10 +207,10 @@ const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
         createdAt={createdAt}
         showDatePicker={showDatePicker}
         setCreatedAt={setCreatedAt}
-        label="Date"
+        label={t('transaction.dateLabel')}
       />
 
-      <PrimaryText size={12} color={colors.secondaryText} style={gs.mb8}>Category</PrimaryText>
+      <PrimaryText size={12} color={colors.secondaryText} style={gs.mb8}>{t('transaction.categoryLabel')}</PrimaryText>
       <ScrollView showsVerticalScrollIndicator={false}>
         <CategoryContainer
           categories={categories}
@@ -219,7 +221,7 @@ const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
         <PrimaryButton
           onPress={handleAddCategory}
           colors={colors}
-          buttonTitle="Add Category"
+          buttonTitle={t('transaction.addCategoryButton')}
           variant="ghost"
           size="sm"
           fullWidth={false}
@@ -229,7 +231,7 @@ const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
         <PrimaryButton
           onPress={isAddButton ? handleAddExpense : handleUpdateExpense}
           colors={colors}
-          buttonTitle={isAddButton ? 'Add' : 'Update'}
+          buttonTitle={isAddButton ? t('common.add') : t('common.update')}
           disabled={!isValid}
         />
       </View>

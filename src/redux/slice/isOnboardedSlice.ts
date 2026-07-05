@@ -2,10 +2,18 @@ import {createSlice} from '@reduxjs/toolkit';
 import {RootState} from '../rootReducer';
 import StorageService from '../../utils/asyncStorageService';
 
-const storedValue = StorageService.getItemSync('isOnboarded');
+let initialIsOnboarded = false;
+try {
+  const storedValue = StorageService.getItemSync('isOnboarded');
+  if (storedValue) {
+    initialIsOnboarded = JSON.parse(storedValue) === true;
+  }
+} catch {
+  // Corrupted MMKV value — safe to re-onboard, data still in SQLite
+}
 
 const initialState = {
-  isOnboarded: storedValue ? JSON.parse(storedValue) : false,
+  isOnboarded: initialIsOnboarded,
 };
 
 const isOnboardedSlice = createSlice({

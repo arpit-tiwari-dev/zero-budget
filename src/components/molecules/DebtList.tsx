@@ -1,14 +1,16 @@
 import {RefreshControlProps, View} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import React, {useCallback, useMemo, useRef, memo} from 'react';
+import {useTranslation} from 'react-i18next';
 import Animated, {SharedValue, useAnimatedStyle, interpolate} from 'react-native-reanimated';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import type {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import {DebtData as Debt} from '../../watermelondb/services';
 import PrimaryText from '../atoms/PrimaryText';
 import Icon from '../atoms/Icons';
 import {formatDate, formatCalendar} from '../../utils/dateUtils';
 import {Colors} from '../../hooks/useThemeColors';
-import {formatCurrency} from '../../utils/numberUtils';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {FlashList} from '@shopify/flash-list';
 import {gs} from '../../styles/globalStyles';
 
@@ -17,9 +19,9 @@ interface DebtListProps {
   handleEditDebt: (debtId: string, description: string, amount: number, date: string, type: string) => void;
   handleDeleteDebt: (debtId: string) => void;
   individualDebts: Array<Debt>;
-  currencySymbol: string;
   ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
   refreshControl?: React.ReactElement<RefreshControlProps>;
+  tutorialSwipeRef?: React.RefObject<SwipeableMethods | null>;
 }
 
 interface GroupedDebt {
@@ -74,31 +76,34 @@ const SwipeAction = ({
 const DebtRow = memo(({
   debt,
   colors,
-  currencySymbol,
   onEdit,
   onDelete,
   openSwipeableRef,
+  tutorialSwipeRef,
 }: {
   debt: Debt;
   colors: Colors;
-  currencySymbol: string;
   onEdit: (debt: Debt) => void;
   onDelete: (debtId: string) => void;
   openSwipeableRef: React.RefObject<{close: () => void} | null>;
+  tutorialSwipeRef?: React.RefObject<SwipeableMethods | null>;
 }) => {
-  const swipeableRef = useRef<any>(null);
+  const swipeableRef = useRef<SwipeableMethods | null>(null);
+  const formatAmount = useFormatAmount();
+
+  const combinedRef = tutorialSwipeRef ?? swipeableRef;
 
   const handleSwipeWillOpen = useCallback(() => {
-    if (openSwipeableRef.current && openSwipeableRef.current !== swipeableRef.current) {
+    if (openSwipeableRef.current && openSwipeableRef.current !== combinedRef.current) {
       openSwipeableRef.current.close();
     }
-    openSwipeableRef.current = swipeableRef.current;
-  }, [openSwipeableRef]);
+    openSwipeableRef.current = combinedRef.current;
+  }, [openSwipeableRef, combinedRef]);
 
   return (
     <View style={gs.mb5}>
       <ReanimatedSwipeable
-        ref={swipeableRef}
+        ref={combinedRef}
         renderLeftActions={(progress, _translation, swipeableMethods) => (
           <SwipeAction
             progress={progress}
@@ -149,7 +154,7 @@ const DebtRow = memo(({
           </View>
           <View style={gs.ml10}>
             <PrimaryText size={14} weight="semibold" variant="number">
-              {currencySymbol}{formatCurrency(debt.amount)}
+              {formatAmount(debt.amount)}
             </PrimaryText>
           </View>
         </View>
@@ -161,17 +166,19 @@ const DebtRow = memo(({
 const DebtGroup = memo(({
   group,
   colors,
-  currencySymbol,
   handleEditDebt,
   handleDeleteDebt,
   openSwipeableRef,
+  tutorialSwipeRef,
+  isFirstGroup,
 }: {
   group: GroupedDebt;
   colors: Colors;
-  currencySymbol: string;
   handleEditDebt: (debtId: string, description: string, amount: number, date: string, type: string) => void;
   handleDeleteDebt: (debtId: string) => void;
   openSwipeableRef: React.RefObject<{close: () => void} | null>;
+  tutorialSwipeRef?: React.RefObject<SwipeableMethods | null>;
+  isFirstGroup?: boolean;
 }) => {
   const onEdit = useCallback((debt: Debt) => {
     handleEditDebt(String(debt.id), debt.description, debt.amount, debt.date, debt.type);
@@ -186,15 +193,15 @@ const DebtGroup = memo(({
       <PrimaryText size={12} weight="semibold" color={colors.secondaryText} style={[gs.mb8, gs.mt15, gs.px16]}>
         {group.label}
       </PrimaryText>
-      {group.debts.map(debt => (
+      {group.debts.map((debt, index) => (
         <DebtRow
           key={String(debt.id)}
           debt={debt}
           colors={colors}
-          currencySymbol={currencySymbol}
           onEdit={onEdit}
           onDelete={onDelete}
           openSwipeableRef={openSwipeableRef}
+          tutorialSwipeRef={isFirstGroup && index === 0 ? tutorialSwipeRef : undefined}
         />
       ))}
     </View>
@@ -206,10 +213,11 @@ const DebtList: React.FC<DebtListProps> = ({
   handleEditDebt,
   handleDeleteDebt,
   individualDebts,
-  currencySymbol,
   ListHeaderComponent,
   refreshControl,
+  tutorialSwipeRef,
 }) => {
+  const {t} = useTranslation();
   const openSwipeableRef = useRef<{close: () => void} | null>(null);
 
   const groupedData: GroupedDebt[] = useMemo(() => {
@@ -230,17 +238,18 @@ const DebtList: React.FC<DebtListProps> = ({
   }, [individualDebts]);
 
   const renderGroupItem = useCallback(
-    ({item}: {item: GroupedDebt}) => (
+    ({item, index}: {item: GroupedDebt; index: number}) => (
       <DebtGroup
         group={item}
         colors={colors}
-        currencySymbol={currencySymbol}
         handleEditDebt={handleEditDebt}
         handleDeleteDebt={handleDeleteDebt}
         openSwipeableRef={openSwipeableRef}
+        tutorialSwipeRef={index === 0 ? tutorialSwipeRef : undefined}
+        isFirstGroup={index === 0}
       />
     ),
-    [colors, handleEditDebt, handleDeleteDebt, currencySymbol],
+    [colors, handleEditDebt, handleDeleteDebt, tutorialSwipeRef],
   );
 
   const ListEmpty = useCallback(() => (
@@ -249,7 +258,7 @@ const DebtList: React.FC<DebtListProps> = ({
         <Icon name="hand-coins" size={22} color={colors.secondaryText} />
       </View>
       <PrimaryText size={13} color={colors.secondaryText} style={gs.mt10}>
-        No entries yet
+        {t('debts.noEntriesYet')}
       </PrimaryText>
     </View>
   ), [colors]);

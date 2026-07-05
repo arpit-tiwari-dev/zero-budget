@@ -1,5 +1,6 @@
 import React, {useState, memo, useCallback} from 'react';
 import {View, TextInput, TouchableOpacity} from 'react-native';
+import {useTranslation} from 'react-i18next';
 import AppHeader from '../../components/atoms/AppHeader';
 import CustomInput from '../../components/atoms/CustomInput';
 import PrimaryButton from '../../components/atoms/PrimaryButton';
@@ -26,6 +27,7 @@ interface DebtEntryProps {
 }
 
 const DebtEntry: React.FC<DebtEntryProps> = ({buttonText, route}) => {
+  const {t} = useTranslation();
   const colors = useThemeColors();
   const dispatch = useDispatch<AppDispatch>();
   const currencySymbol = useSelector(selectCurrencySymbol);
@@ -85,26 +87,26 @@ const DebtEntry: React.FC<DebtEntryProps> = ({buttonText, route}) => {
     <PrimaryView colors={colors} style={gs.justifyBetween} dismissKeyboardOnTouch>
       <View>
         <View style={[gs.mb20, gs.mt20]}>
-          <AppHeader onPress={goBack} colors={colors} text={isAddButton ? 'Add Debt' : 'Edit Debt'} />
+          <AppHeader onPress={goBack} colors={colors} text={isAddButton ? t('debt.addTitle') : t('debt.editTitle')} />
         </View>
 
         <PrimaryText size={12} color={colors.secondaryText} style={gs.mb8}>
           {debtorName}
         </PrimaryText>
         <View style={[gs.row, gs.gap8, gs.mb15]}>
-          {(['Borrow', 'Lend'] as const).map(t => {
-            const isSelected = debtsType === t;
-            const label = t === 'Borrow' ? 'Borrowing' : 'Lending';
+          {(['Borrow', 'Lend'] as const).map(debtTypeOption => {
+            const isSelected = debtsType === debtTypeOption;
+            const label = debtTypeOption === 'Borrow' ? t('debts.borrowing') : t('debts.lending');
             let bgColor = colors.secondaryAccent;
-            if (isSelected && t === 'Borrow') {
+            if (isSelected && debtTypeOption === 'Borrow') {
               bgColor = colors.accentOrange;
             } else if (isSelected) {
               bgColor = colors.accentGreen;
             }
             return (
               <TouchableOpacity
-                key={t}
-                onPress={() => setDebtsType(t)}
+                key={debtTypeOption}
+                onPress={() => setDebtsType(debtTypeOption)}
                 activeOpacity={0.7}
                 style={[
                   gs.py8,
@@ -128,12 +130,12 @@ const DebtEntry: React.FC<DebtEntryProps> = ({buttonText, route}) => {
           colors={colors}
           input={debtName}
           setInput={setDebtName}
-          placeholder="eg. Coffee"
-          label="Description"
+          placeholder={t('debt.descriptionPlaceholder')}
+          label={t('transaction.descriptionLabel')}
           schema={expenseSchema}
         />
 
-        <PrimaryText size={12} color={colors.secondaryText} style={gs.mb5}>Amount</PrimaryText>
+        <PrimaryText size={12} color={colors.secondaryText} style={gs.mb5}>{t('transaction.amountLabel')}</PrimaryText>
         <View
           style={[
             gs.h48,
@@ -175,7 +177,7 @@ const DebtEntry: React.FC<DebtEntryProps> = ({buttonText, route}) => {
           createdAt={createdAt}
           showDatePicker={showDatePicker}
           setCreatedAt={setCreatedAt}
-          label="Date"
+          label={t('transaction.dateLabel')}
         />
       </View>
 
@@ -183,7 +185,7 @@ const DebtEntry: React.FC<DebtEntryProps> = ({buttonText, route}) => {
         <PrimaryButton
           onPress={isAddButton ? handleAddDebt : handleUpdateDebt}
           colors={colors}
-          buttonTitle={isAddButton ? 'Add' : 'Update'}
+          buttonTitle={isAddButton ? t('common.add') : t('common.update')}
           disabled={!isValid}
         />
       </View>

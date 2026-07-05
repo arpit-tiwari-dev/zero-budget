@@ -1,17 +1,8 @@
 import {PermissionsAndroid, Platform} from 'react-native';
+import {nanoid} from 'nanoid';
 
-export const generateUniqueKey = () => {
-  const characters =
-    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const keyLength = 20;
-  let key = 'zero';
-
-  for (let i = 0; i < keyLength - 4; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    key += characters[randomIndex];
-  }
-
-  return key;
+export const generateUniqueKey = (): string => {
+  return `zero${nanoid(16)}`;
 };
 
 export const requestStoragePermission = async () => {

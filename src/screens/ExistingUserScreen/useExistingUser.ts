@@ -26,6 +26,7 @@ import {setIsOnboarded} from '../../redux/slice/isOnboardedSlice';
 import {AppDispatch} from '../../redux/store';
 import {upgradeExportData} from '../../backend/export/upgrader';
 import type {ExportData} from '../../backend/export/format';
+import {validateExportEnvelope} from '../../backend/export/validate';
 
 type ImportedData = ExportData;
 
@@ -241,15 +242,28 @@ const useExistingUser = () => {
       }
 
       const fileContent = await RNFS.readFile(path, 'utf8');
-      const jsonData = JSON.parse(fileContent);
 
-      const {key} = jsonData;
-      if (!key || !isValidKey(key)) {
+      let jsonData: unknown;
+      try {
+        jsonData = JSON.parse(fileContent);
+      } catch {
+        setUploadMessage('File is not valid JSON. Please select a zero export file.');
+        return;
+      }
+
+      const validation = validateExportEnvelope(jsonData);
+      if (!validation.success) {
+        setUploadMessage(validation.error ?? 'This file is not a valid Zero export.');
+        return;
+      }
+
+      const parsed = jsonData as {key: string; version?: number; data: ImportedData};
+      if (!isValidKey(parsed.key)) {
         setUploadMessage('Invalid key. Please upload a valid zero export file.');
         return;
       }
 
-      const data: ImportedData = upgradeExportData(jsonData);
+      const data: ImportedData = upgradeExportData(parsed);
 
       setFileName(res.name ?? 'data.json');
       setUploadMessage('Syncing your data...');
@@ -283,14 +297,14 @@ const useExistingUser = () => {
   };
 
   const reUpload = async () => {
-    await deleteAllData();
-    dispatch(fetchCategories());
-    dispatch(fetchDebtors());
-    dispatch(fetchUserData());
     setFileName(null);
     setIsSyncComplete(false);
     setSyncError(null);
     setSyncStats({categories: 0, expenses: 0, debtors: 0, debts: 0});
+    await deleteAllData();
+    dispatch(fetchCategories());
+    dispatch(fetchDebtors());
+    dispatch(fetchUserData());
     await importData();
   };
 
