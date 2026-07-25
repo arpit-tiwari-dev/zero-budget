@@ -1,8 +1,9 @@
-import {Image, TouchableOpacity, View} from 'react-native';
+import {TouchableOpacity, View} from 'react-native';
 import React, {memo, useCallback} from 'react';
 import Icon from '../atoms/Icons';
+import MeshAvatar from '../atoms/MeshAvatar';
 import useThemeColors from '../../hooks/useThemeColors';
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import {selectUserName, setUserName} from '../../redux/slice/userNameSlice';
 import {navigate} from '../../utils/navigationUtils';
 import PrimaryText from '../atoms/PrimaryText';
@@ -17,9 +18,9 @@ interface HeaderContainerProps {
 
 const HeaderContainer: React.FC<HeaderContainerProps> = ({headerText}) => {
   const colors = useThemeColors();
-  const dispatch = useDispatch();
-  const userName = useSelector(selectUserName);
-  const userId = useSelector(selectUserId);
+  const dispatch = useAppDispatch();
+  const userName = useAppSelector(selectUserName);
+  const userId = useAppSelector(selectUserId);
 
   const handleProfileClick = useCallback(() => {
     void SheetManager.show('change-name-sheet', {
@@ -42,15 +43,13 @@ const HeaderContainer: React.FC<HeaderContainerProps> = ({headerText}) => {
     <View style={[gs.rowCenter, gs.mt15, gs.justifyBetween]}>
       <View style={[gs.rowCenter, gs.flex1, gs.gap12]}>
         <TouchableOpacity onPress={handleProfileClick}>
-          <View style={[gs.size40, gs.p2, gs.rounded50, gs.center, {backgroundColor: colors.primaryText}]}>
-            <Image source={require('../../../assets/images/2.png')} style={[gs.size40, gs.absolute, gs.rounded50]} />
-            <PrimaryText size={18} weight="bold" color={"#000"} style={gs.zIndex3}>
-              {(userName?.split(' ') ?? [])
-                .map((n: string) => n.charAt(0))
-                .slice(0, 2)
-                .join('')}
-            </PrimaryText>
-          </View>
+          <MeshAvatar
+            name={userName ?? ''}
+            size={40}
+            bgColor={colors.accentGreen}
+            textColor={colors.buttonText}
+            meshColor={colors.buttonText}
+          />
         </TouchableOpacity>
         <PrimaryText size={16} weight="semibold">{headerText}</PrimaryText>
       </View>

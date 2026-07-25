@@ -5,6 +5,7 @@ import Expense from '../models/Expense';
 import Currency from '../models/Currency';
 import Debtor from '../models/Debtor';
 import Debt from '../models/Debt';
+import Budget from '../models/Budget';
 import {Q} from '@nozbe/watermelondb';
 
 /**
@@ -20,6 +21,7 @@ export const deleteAllData = async (): Promise<void> => {
       const currencies = await database.get<Currency>('currencies').query().fetch();
       const debtors = await database.get<Debtor>('debtors').query().fetch();
       const debts = await database.get<Debt>('debts').query().fetch();
+      const budgets = await database.get<Budget>('budgets').query().fetch();
 
       // Batch delete all records
       const allRecords = [
@@ -29,6 +31,7 @@ export const deleteAllData = async (): Promise<void> => {
         ...currencies,
         ...debtors,
         ...debts,
+        ...budgets,
       ];
 
       await database.batch(

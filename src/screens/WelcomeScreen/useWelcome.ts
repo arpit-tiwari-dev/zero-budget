@@ -6,14 +6,7 @@ import {navigate} from '../../utils/navigationUtils';
 const useWelcome = () => {
   const colors = useThemeColors();
 
-  const handleAllreadyUser = useCallback(async () => {
-    try {
-      await deleteAllData();
-    } catch (error) {
-      if (__DEV__) {
-        console.error('Error deleting data for existing user:', error);
-      }
-    }
+  const handleAlreadyUser = useCallback(() => {
     navigate('ExistingUserScreen');
   }, []);
 
@@ -30,7 +23,7 @@ const useWelcome = () => {
 
   return {
     colors,
-    handleAllreadyUser,
+    handleAlreadyUser,
     handleNewUser,
   };
 };

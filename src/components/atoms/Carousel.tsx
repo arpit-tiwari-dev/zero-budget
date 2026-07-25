@@ -21,7 +21,11 @@ const SLIDE_IMAGES: Record<string, React.FC<{width: string; height: string}>> = 
   '3': SvgImage2,
 };
 
-const Carousel = () => {
+interface CarouselProps {
+  autoplay?: boolean;
+}
+
+const Carousel = ({autoplay = true}: CarouselProps) => {
   const colors = useThemeColors();
   const {t} = useTranslation();
 
@@ -30,7 +34,7 @@ const Carousel = () => {
       style={gs.mt30p}
       height={300}
       horizontal={true}
-      autoplay
+      autoplay={autoplay}
       dot={<View style={[gs.m3, gs.rounded4, {backgroundColor: colors.secondaryAccent, width: 6, height: 6}]} />}
       activeDot={<View style={[gs.m3, gs.rounded5, {backgroundColor: colors.primaryText, width: 8, height: 8}]} />}
       paginationStyle={[gs.bottom15p, gs.left0, gs.right0]}

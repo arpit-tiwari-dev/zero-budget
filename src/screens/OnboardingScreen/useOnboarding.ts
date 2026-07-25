@@ -1,11 +1,9 @@
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import useThemeColors from '../../hooks/useThemeColors';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {fetchUserData, selectUserId} from '../../redux/slice/userIdSlice';
 import {navigate} from '../../utils/navigationUtils';
 import {createCategory} from '../../watermelondb/services';
-import {AppDispatch} from '../../redux/store';
-
 interface CategorySelection {
   name: string;
   icon?: string;
@@ -18,9 +16,9 @@ const useOnboarding = () => {
 
   const selectedCategoryNames = useMemo(() => new Set(selectedCategories.map(c => c.name)), [selectedCategories]);
 
-  const userId = useSelector(selectUserId);
+  const userId = useAppSelector(selectUserId);
 
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const handleSkip = useCallback(() => {
     navigate('ChooseCurrencyScreen');
   }, []);

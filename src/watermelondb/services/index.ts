@@ -77,5 +77,13 @@ export type {ExportData} from './getService';
 export {
   deleteAllData,
   deleteAllExpensesByUserId,
-  deleteAllCategoriesByUserId,
 } from './deleteService';
+
+// Budget Service
+export {
+  upsertBudget,
+  updateBudget,
+  deleteBudget,
+  getBudgetsByMonth,
+} from './budgetService';
+export type {BudgetData} from './budgetService';

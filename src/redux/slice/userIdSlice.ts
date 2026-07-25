@@ -40,11 +40,7 @@ export const fetchUserData = createAsyncThunk<UserData, void, {rejectValue: stri
 const userIdSlice = createSlice({
   name: 'userId',
   initialState,
-  reducers: {
-    setUserId: (state, action) => {
-      state.userId = action.payload;
-    },
-  },
+  reducers: {},
   extraReducers: builder => {
     builder
       .addCase(fetchUserData.pending, state => {
@@ -66,7 +62,5 @@ const userIdSlice = createSlice({
 export const selectUserId = (state: RootState) => state.userId.userId;
 export const selectUserLoading = (state: RootState) => state.userId.isLoading;
 export const selectUserError = (state: RootState) => state.userId.error;
-
-export const {setUserId} = userIdSlice.actions;
 
 export default userIdSlice.reducer;

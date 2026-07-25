@@ -1,31 +1,34 @@
 import {ScrollView, TextInput, View} from 'react-native';
-import React, {useCallback, useEffect, useState, memo} from 'react';
+import React, {useCallback, useEffect, useMemo, useState, memo} from 'react';
+import type {RouteProp} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
+import type {HomeStackParamList} from '../../navigation/types';
 import PrimaryView from '../atoms/PrimaryView';
 import AppHeader from '../atoms/AppHeader';
 import CustomInput from '../atoms/CustomInput';
 import PrimaryText from '../atoms/PrimaryText';
+import Icon from '../atoms/Icons';
 import CategoryContainer from './CategoryContainer';
 import PrimaryButton from '../atoms/PrimaryButton';
 import useThemeColors from '../../hooks/useThemeColors';
+import useFormatAmount from '../../hooks/useFormatAmount';
 import {goBack, navigate} from '../../utils/navigationUtils';
-import {useDispatch, useSelector} from 'react-redux';
 import {selectCurrencySymbol} from '../../redux/slice/currencyDataSlice';
 import {selectUserId} from '../../redux/slice/userIdSlice';
 import {fetchCategories, selectActiveCategories} from '../../redux/slice/categoryDataSlice';
-import {createExpense, updateExpenseById} from '../../watermelondb/services';
+import {createExpense, updateExpenseById, getAllExpensesByDate, type CategoryData as CategoryDocType} from '../../watermelondb/services';
 import {fetchExpensesByMonth, invalidateExpenseCache} from '../../redux/slice/expenseDataSlice';
+import {fetchBudgetsByMonth, selectCurrentBudget} from '../../redux/slice/budgetDataSlice';
 import DatePicker from '../atoms/DatePicker';
 import {getISODateTime, formatDate} from '../../utils/dateUtils';
 import {ensureYearInCache} from '../../utils/availableYearsCache';
 import {expenseAmountSchema, expenseDescriptionSchema, expenseSchema} from '../../utils/validationSchema';
-import {CategoryData as CategoryDocType} from '../../watermelondb/services';
-import {AppDispatch} from '../../redux/store';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import {gs} from '../../styles/globalStyles';
 
 interface ExpenseEntryProps {
   type: string;
-  route?: any;
+  route?: RouteProp<HomeStackParamList, 'UpdateTransactionScreen'>;
 }
 
 const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
@@ -33,7 +36,7 @@ const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
   const expenseData = route?.params;
   const isAddButton = type === 'Add';
   const [hasInteracted, setHasInteracted] = useState(false);
-  const categories = useSelector(selectActiveCategories);
+  const categories = useAppSelector(selectActiveCategories);
   const [selectedCategories, setSelectedCategories] = useState<CategoryDocType[]>(
     isAddButton
       ? []
@@ -55,15 +58,46 @@ const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
     expenseDescriptionSchema.safeParse(expenseDescription).success &&
     expenseAmountSchema.safeParse(Number(expenseAmount)).success;
 
-  const userId = useSelector(selectUserId);
-  const currencySymbol = useSelector(selectCurrencySymbol);
-  const dispatch = useDispatch<AppDispatch>();
+  const userId = useAppSelector(selectUserId);
+  const currencySymbol = useAppSelector(selectCurrencySymbol);
+  const dispatch = useAppDispatch();
 
   const colors = useThemeColors();
+  const formatAmount = useFormatAmount();
+  const currentBudget = useAppSelector(selectCurrentBudget);
+
+  const expenseYearMonth = formatDate(createdAt, 'YYYY-MM');
+  const expenseDateStr = formatDate(createdAt, 'YYYY-MM-DD');
 
   useEffect(() => {
     dispatch(fetchCategories());
-  }, [dispatch]);
+    dispatch(fetchBudgetsByMonth(expenseYearMonth));
+  }, [dispatch, expenseYearMonth]);
+
+  const [daySpend, setDaySpend] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    getAllExpensesByDate(userId, expenseDateStr).then(expenses => {
+      if (!cancelled) {
+        setDaySpend(expenses.reduce((sum, e) => sum + e.amount, 0));
+      }
+    });
+    return () => { cancelled = true; };
+  }, [userId, expenseDateStr]);
+
+  const dailyBudgetInfo = useMemo(() => {
+    if (!currentBudget) {return null;}
+
+    const [yearStr, monthStr] = expenseYearMonth.split('-');
+    const year = Number.parseInt(yearStr, 10);
+    const month = Number.parseInt(monthStr, 10);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const dailyBudget = currentBudget.amount / daysInMonth;
+    const enteredAmount = Number.parseFloat(expenseAmount) || 0;
+    const dailyRemaining = dailyBudget - daySpend - enteredAmount;
+
+    return {dailyBudget, dailyRemaining, exceeded: dailyRemaining <= 0};
+  }, [currentBudget, expenseYearMonth, daySpend, expenseAmount]);
 
   const handleAddCategory = useCallback(() => {
     navigate('AddCategoryScreen');
@@ -95,13 +129,13 @@ const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
   }, [isValid, selectedCategories, userId, expenseTitle, expenseAmount, expenseDescription, createdAt, dispatch]);
 
   const handleUpdateExpense = useCallback(async () => {
-    if (!isValid || selectedCategories.length === 0) {
+    if (!isValid || selectedCategories.length === 0 || !expenseData?.expenseId) {
       return;
     }
     const categoryId = selectedCategories[0].id;
     try {
       await updateExpenseById(
-        expenseData?.expenseId,
+        expenseData.expenseId,
         categoryId,
         expenseTitle,
         Number(expenseAmount),
@@ -202,6 +236,28 @@ const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
         </View>
       )}
 
+      {dailyBudgetInfo ? (
+        <View style={[gs.rowCenter, gs.gap6, gs.mb10]}>
+          <Icon
+            name="target"
+            size={13}
+            color={dailyBudgetInfo.exceeded ? colors.accentOrange : colors.accentGreen}
+          />
+          <PrimaryText size={11} variant="number" color={colors.secondaryText}>
+            {t('transaction.dailyBudget', {amount: formatAmount(Math.round(dailyBudgetInfo.dailyBudget))})}
+          </PrimaryText>
+          <PrimaryText size={11} color={colors.secondaryText}>·</PrimaryText>
+          <PrimaryText
+            size={11}
+            variant="number"
+            color={dailyBudgetInfo.exceeded ? colors.accentOrange : colors.accentGreen}>
+            {dailyBudgetInfo.exceeded
+              ? t('transaction.dailyExceeded', {amount: formatAmount(Math.round(Math.abs(dailyBudgetInfo.dailyRemaining)))})
+              : t('transaction.dailyRemaining', {amount: formatAmount(Math.round(dailyBudgetInfo.dailyRemaining))})}
+          </PrimaryText>
+        </View>
+      ) : null}
+
       <DatePicker
         setShowDatePicker={setShowDatePicker}
         createdAt={createdAt}
@@ -232,7 +288,7 @@ const ExpenseEntry: React.FC<ExpenseEntryProps> = ({type, route}) => {
           onPress={isAddButton ? handleAddExpense : handleUpdateExpense}
           colors={colors}
           buttonTitle={isAddButton ? t('common.add') : t('common.update')}
-          disabled={!isValid}
+          disabled={!isValid || selectedCategories.length === 0}
         />
       </View>
     </PrimaryView>

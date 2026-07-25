@@ -128,7 +128,7 @@ const DebtorList: React.FC<DebtorListProps> = ({colors, debtors, allDebts, ListH
         keyExtractor={item => String(item.id)}
         ListHeaderComponent={ListHeaderComponent}
         ListEmptyComponent={ListEmpty}
-        contentContainerStyle={gs.pb80}
+        contentContainerStyle={gs.pb100}
       />
     </View>
   );

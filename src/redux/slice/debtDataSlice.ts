@@ -1,20 +1,27 @@
 import {createAsyncThunk, createEntityAdapter, createSlice} from '@reduxjs/toolkit';
 import {RootState} from '../rootReducer';
-import {DebtData as Debt, getAllDebtsByUserIdAndDebtorId} from '../../watermelondb/services';
+import {DebtData as Debt, getAllDebtsByUserIdAndDebtorId, getAllDebtsByUserId} from '../../watermelondb/services';
 import {selectUserId} from './userIdSlice';
+
+export interface DebtWithDebtor extends Debt {
+  debtor?: {type: string};
+}
 
 const debtsAdapter = createEntityAdapter<Debt>();
 
 const initialState = debtsAdapter.getInitialState({
   isLoading: false,
   error: null as string | null,
+  allDebts: [] as DebtWithDebtor[],
+  allDebtsLoading: false,
+  allDebtsError: null as string | null,
 });
 
-export const fetchDebtsByDebtor = createAsyncThunk(
+export const fetchDebtsByDebtor = createAsyncThunk<Debt[], string, {state: RootState}>(
   'debt/fetchByDebtor',
   async (debtorId: string, {getState, rejectWithValue}) => {
     try {
-      const userId = selectUserId(getState() as RootState);
+      const userId = selectUserId(getState());
       const debts = await getAllDebtsByUserIdAndDebtorId(userId, debtorId);
       return debts;
     } catch (error) {
@@ -23,17 +30,20 @@ export const fetchDebtsByDebtor = createAsyncThunk(
   },
 );
 
+export const fetchAllDebts = createAsyncThunk<DebtWithDebtor[], void, {state: RootState}>('debt/fetchAll', async (_, {getState, rejectWithValue}) => {
+  try {
+    const userId = selectUserId(getState());
+    const allDebts = await getAllDebtsByUserId(userId);
+    return allDebts as DebtWithDebtor[];
+  } catch (error) {
+    return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch all debts');
+  }
+});
+
 const debtDataSlice = createSlice({
   name: 'debt',
   initialState,
-  reducers: {
-    debtAdded: debtsAdapter.addOne,
-    debtUpdated: debtsAdapter.updateOne,
-    debtRemoved: debtsAdapter.removeOne,
-    clearDebts: state => {
-      debtsAdapter.removeAll(state);
-    },
-  },
+  reducers: {},
   extraReducers: builder => {
     builder
       .addCase(fetchDebtsByDebtor.pending, state => {
@@ -48,6 +58,19 @@ const debtDataSlice = createSlice({
       .addCase(fetchDebtsByDebtor.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      .addCase(fetchAllDebts.pending, state => {
+        state.allDebtsLoading = true;
+        state.allDebtsError = null;
+      })
+      .addCase(fetchAllDebts.fulfilled, (state, action) => {
+        state.allDebtsLoading = false;
+        state.allDebtsError = null;
+        state.allDebts = action.payload;
+      })
+      .addCase(fetchAllDebts.rejected, (state, action) => {
+        state.allDebtsLoading = false;
+        state.allDebtsError = action.payload as string;
       });
   },
 });
@@ -62,6 +85,8 @@ export const selectDebtEntities = debtSelectors.selectEntities;
 export const selectDebtLoading = (state: RootState) => state.debt.isLoading;
 export const selectDebtError = (state: RootState) => state.debt.error;
 
-export const {debtAdded, debtUpdated, debtRemoved, clearDebts} = debtDataSlice.actions;
+export const selectAllDebts = (state: RootState) => state.debt.allDebts;
+export const selectAllDebtsLoading = (state: RootState) => state.debt.allDebtsLoading;
+export const selectAllDebtsError = (state: RootState) => state.debt.allDebtsError;
 
 export default debtDataSlice.reducer;

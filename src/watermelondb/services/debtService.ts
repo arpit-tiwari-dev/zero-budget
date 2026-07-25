@@ -26,6 +26,8 @@ export const createDebt = async (
 ): Promise<string> => {
   let debtId = '';
   await database.write(async () => {
+    // Uses WatermelonDB auto-generated ID (library default). This is intentional;
+    // other services use nanoid(24) for historical reasons. Both are valid.
     const debt = await database.get<Debt>('debts').create(d => {
       d.description = description;
       d.amount = amount;
@@ -44,7 +46,6 @@ export const createDebt = async (
  */
 export const updateDebtById = async (
   debtId: string,
-  _debtorId?: string,
   newAmount?: number,
   newDescription?: string,
   newDate?: string,

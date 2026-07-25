@@ -1,4 +1,5 @@
-import {useSelector} from 'react-redux';
+import {useCallback} from 'react';
+import {useAppSelector} from '../redux/hooks';
 import {selectCurrencyCode, selectCurrencySymbol} from '../redux/slice/currencyDataSlice';
 import {formatAmountWithSymbol, formatCurrency} from '../utils/numberUtils';
 
@@ -14,16 +15,15 @@ import {formatAmountWithSymbol, formatCurrency} from '../utils/numberUtils';
  *   // en-IN + INR → "₹12,400"
  */
 const useFormatAmount = () => {
-  const currencyCode = useSelector(selectCurrencyCode);
-  const currencySymbol = useSelector(selectCurrencySymbol);
+  const currencyCode = useAppSelector(selectCurrencyCode);
+  const currencySymbol = useAppSelector(selectCurrencySymbol);
 
-  const formatAmount = (amount: number): string => {
+  const formatAmount = useCallback((amount: number): string => {
     if (currencyCode) {
       return formatAmountWithSymbol(amount, currencyCode);
     }
-    // Fallback if currencyCode not yet loaded
     return `${currencySymbol}${formatCurrency(amount)}`;
-  };
+  }, [currencyCode, currencySymbol]);
 
   return formatAmount;
 };

@@ -55,7 +55,12 @@ const ChooseCurrencyScreen = () => {
         />
       </ScrollView>
 
-      <PrimaryButton onPress={handleCurrencySubmit} colors={colors} buttonTitle={t('common.continue')} />
+      <PrimaryButton
+        onPress={handleCurrencySubmit}
+        colors={colors}
+        buttonTitle={t('common.continue')}
+        disabled={!selectedCurrency}
+      />
     </PrimaryView>
   );
 };

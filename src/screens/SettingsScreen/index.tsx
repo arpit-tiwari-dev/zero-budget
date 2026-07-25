@@ -13,6 +13,7 @@ import {getTimestamp} from '../../utils/dateUtils';
 import {CURRENT_EXPORT_VERSION} from '../../backend/export/format';
 import {SheetManager} from 'react-native-actions-sheet';
 import {setLocaleOverride} from '../../utils/locale';
+import {hasMigrationFailed} from '../../backend';
 import {Colors} from '../../hooks/useThemeColors';
 import {gs, hitSlop} from '../../styles/globalStyles';
 
@@ -71,7 +72,24 @@ const SettingsScreen = () => {
     allData,
     handleExportResult,
     requestStorageViaDialog,
+    currentBudget,
+    budgetMonthLabel,
+    handleBudgetSave,
+    handleBudgetRemove,
   } = useSettings();
+
+  const handleOpenBudgetSheet = useCallback(() => {
+    void SheetManager.show('budget-sheet', {
+      payload: {
+        currentAmount: currentBudget?.amount,
+        currencySymbol,
+        isRecurring: currentBudget?.month.startsWith('recurring') ?? false,
+        monthLabel: budgetMonthLabel,
+        onSave: handleBudgetSave,
+        onRemove: handleBudgetRemove,
+      },
+    });
+  }, [currentBudget, currencySymbol, handleBudgetSave, handleBudgetRemove]);
 
   const handleOpenCurrencySheet = useCallback(() => {
     void SheetManager.show('currency-picker-sheet', {
@@ -127,6 +145,8 @@ const SettingsScreen = () => {
     }
   };
 
+  const migrationFailed = hasMigrationFailed();
+
   const openThemePicker = useCallback(() => {
     void SheetManager.show('theme-picker-sheet', {
       payload: {
@@ -147,6 +167,29 @@ const SettingsScreen = () => {
         <PrimaryText size={22} weight="semibold">{t('settings.title')}</PrimaryText>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={gs.pb80}>
+        {migrationFailed ? (
+          <View
+            style={[
+              gs.rounded12,
+              gs.px14,
+              gs.py12,
+              gs.mt20,
+              gs.rowCenter,
+              gs.gap10,
+              {backgroundColor: colors.containerColor, borderWidth: 1, borderColor: colors.accentOrange},
+            ]}>
+            <Icon name="alert-triangle" size={18} color={colors.accentOrange} />
+            <View style={gs.flex1}>
+              <PrimaryText size={13} weight="semibold" color={colors.accentOrange}>
+                {t('settings.dataWarningTitle')}
+              </PrimaryText>
+              <PrimaryText size={11} color={colors.secondaryText} style={gs.mt2}>
+                {t('settings.dataWarningMessage')}
+              </PrimaryText>
+            </View>
+          </View>
+        ) : null}
+
         <PrimaryText
           size={11}
           weight="semibold"
@@ -195,9 +238,18 @@ const SettingsScreen = () => {
           <View style={[gs.mx16, {height: 1, backgroundColor: colors.secondaryAccent}]} />
           <SettingsRow
             colors={colors}
+            icon="target"
+            label={t('settings.budget')}
+            subtitle={t('settings.budgetSubtitle')}
+            value={currentBudget ? `${currencySymbol}${currentBudget.amount.toLocaleString()}` : undefined}
+            onPress={handleOpenBudgetSheet}
+          />
+          <View style={[gs.mx16, {height: 1, backgroundColor: colors.secondaryAccent}]} />
+          <SettingsRow
+            colors={colors}
             icon="globe"
             label={t('settings.language')}
-            value="English"
+            value={t('settings.currentLanguage')}
             onPress={() => {
               void SheetManager.show('language-picker-sheet', {
                 payload: {

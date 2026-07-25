@@ -13,6 +13,7 @@ import PrimaryText from '../../components/atoms/PrimaryText';
 import EmptyState from '../../components/atoms/EmptyState';
 import useFormatAmount from '../../hooks/useFormatAmount';
 import {SheetManager} from 'react-native-actions-sheet';
+import DailyBudgetRow from '../../components/atoms/DailyBudgetRow';
 import {gs, hitSlop} from '../../styles/globalStyles';
 
 const HomeScreen = () => {
@@ -20,7 +21,6 @@ const HomeScreen = () => {
     colors,
     refreshing,
     userName,
-    currencySymbol,
     onRefresh,
     sortedTransactions,
     selectedYear,
@@ -30,7 +30,10 @@ const HomeScreen = () => {
     availableYears,
     totalSpent,
     transactionCount,
-    avgPerDay,
+    todayTotal,
+    isCurrentMonth,
+    daysInMonth,
+    currentBudget,
     handleMonthYearSelect,
   } = useHome();
   const {t} = useTranslation();
@@ -48,42 +51,74 @@ const HomeScreen = () => {
     });
   }, [selectedMonthIndex, selectedYear, availableYears, handleMonthYearSelect]);
 
+  const budgetPct = currentBudget ? Math.min(Math.round((totalSpent / currentBudget.amount) * 100), 999) : 0;
+  const budgetExceeded = currentBudget ? totalSpent > currentBudget.amount : false;
+  const dailyBudget = currentBudget && daysInMonth > 0 ? currentBudget.amount / daysInMonth : 0;
+  const dailyLeft = dailyBudget - todayTotal;
+
   const listHeader = useMemo(
     () => (
-      <TouchableOpacity
-        onPress={openMonthPicker}
-        activeOpacity={0.7}
-        style={[
-          gs.mx16,
-          gs.px14,
-          gs.py12,
-          gs.rounded12,
-          {backgroundColor: colors.accentGreen},
-        ]}>
-        <View style={gs.rowBetweenCenter}>
-          <View style={[gs.rowCenter, gs.gap6]}>
-            <PrimaryText size={14} weight="semibold" color={colors.buttonText}>
-              {selectedMonthName} {selectedYear}
+      <View style={gs.mx16}>
+        <TouchableOpacity
+          onPress={openMonthPicker}
+          activeOpacity={0.7}
+          style={[gs.px14, gs.py12, gs.rounded12, {backgroundColor: colors.accentGreen}]}>
+          <View style={gs.rowBetweenCenter}>
+            <View style={[gs.rowCenter, gs.gap6]}>
+              <PrimaryText size={14} weight="semibold" color={colors.buttonText}>
+                {selectedMonthName} {selectedYear}
+              </PrimaryText>
+              <Icon name="chevron-down" size={14} color={colors.buttonText} />
+            </View>
+            <PrimaryText size={20} weight="bold" variant="number" color={colors.buttonText}>
+              {formatAmount(totalSpent)}
             </PrimaryText>
-            <Icon name="chevron-down" size={14} color={colors.buttonText} />
           </View>
-          <PrimaryText size={20} weight="bold" variant="number" color={colors.buttonText}>
-            {formatAmount(totalSpent)}
-          </PrimaryText>
-        </View>
+          <View style={[gs.rowCenter, gs.gap8, gs.mt4]}>
+            <PrimaryText size={11} color={colors.buttonText} variant="number" style={{opacity: 0.7}}>
+              {t('home.transactionCount', {count: transactionCount})}
+            </PrimaryText>
+            {todayTotal > 0 ? (
+              <>
+                <PrimaryText size={11} color={colors.buttonText} style={{opacity: 0.7}}>·</PrimaryText>
+                <PrimaryText size={11} color={colors.buttonText} variant="number" style={{opacity: 0.7}}>
+                  {t('home.today')}: {formatAmount(todayTotal)}
+                </PrimaryText>
+              </>
+            ) : null}
+          </View>
+        </TouchableOpacity>
 
-        <View style={[gs.rowCenter, gs.gap8, gs.mt4]}>
-          <PrimaryText size={11} color={colors.buttonText} variant="number" style={{opacity: 0.7}}>
-            {t('home.transactionCount', {count: transactionCount})}
-          </PrimaryText>
-          {/* <PrimaryText size={11} color={colors.buttonText} style={{opacity: 0.7}}>·</PrimaryText>
-          <PrimaryText size={11} color={colors.buttonText} variant="number" style={{opacity: 0.7}}>
-            avg {currencySymbol}{formatCurrency(Math.round(avgPerDay))}/day
-          </PrimaryText> */}
-        </View>
-      </TouchableOpacity>
+        {currentBudget ? (
+          <View style={[gs.px14, gs.py10, gs.rounded12, gs.mt6, {backgroundColor: colors.secondaryAccent}]}>
+            <View style={gs.rowBetweenCenter}>
+              <PrimaryText size={12} weight="semibold" variant="number" color={budgetExceeded ? colors.accentOrange : colors.primaryText}>
+                {formatAmount(Math.max(currentBudget.amount - totalSpent, 0))} {t('home.remaining')}
+              </PrimaryText>
+              <PrimaryText size={11} variant="number" color={colors.secondaryText}>
+                {budgetPct}%
+              </PrimaryText>
+            </View>
+            <View style={[gs.rounded4, gs.h4, gs.mt8, {backgroundColor: colors.secondaryContainerColor}]}>
+              <View
+                style={[
+                  gs.rounded4,
+                  gs.h4,
+                  {
+                    width: `${Math.min(budgetPct, 100)}%`,
+                    backgroundColor: budgetExceeded ? colors.accentOrange : colors.accentGreen,
+                  },
+                ]}
+              />
+            </View>
+            <View style={gs.mt6}>
+              <DailyBudgetRow dailyBudget={dailyBudget} dailyLeft={dailyLeft} isCurrentMonth={isCurrentMonth} colors={colors} formatAmount={formatAmount} t={t} />
+            </View>
+          </View>
+        ) : null}
+      </View>
     ),
-    [selectedMonthName, selectedYear, currencySymbol, totalSpent, transactionCount, avgPerDay, colors, openMonthPicker],
+    [selectedMonthName, selectedYear, totalSpent, transactionCount, todayTotal, isCurrentMonth, currentBudget, budgetPct, budgetExceeded, dailyBudget, dailyLeft, colors, openMonthPicker, formatAmount, t],
   );
 
   const listEmpty = useMemo(
@@ -110,7 +145,7 @@ const HomeScreen = () => {
           ListEmptyComponent={listEmpty}
           refreshing={refreshing}
           onRefresh={onRefresh}
-          contentContainerStyle={gs.pb80}
+          contentContainerStyle={gs.pb100}
           tutorialSwipeRef={tutorialRef}
         />
       </PrimaryView>

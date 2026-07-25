@@ -7,6 +7,7 @@ const userSchema = z.object({
 
 const categorySchema = z.object({
   name: z.string(),
+  categoryStatus: z.boolean().optional(),
   icon: z.string().optional(),
   color: z.string().optional(),
 });
@@ -27,6 +28,7 @@ const currencySchema = z.object({
 
 const debtorSchema = z.object({
   title: z.string(),
+  debtorStatus: z.boolean().optional(),
   icon: z.string().optional(),
   type: z.string().optional(),
   color: z.string().optional(),
@@ -40,6 +42,13 @@ const debtSchema = z.object({
   type: z.string(),
 });
 
+const budgetSchema = z.object({
+  amount: z.number(),
+  month: z.string(),
+  budgetType: z.string(),
+  category: z.object({name: z.string()}).optional(),  // legacy field, ignored on import
+});
+
 const exportDataSchema = z.object({
   users: z.array(userSchema).min(1),
   categories: z.array(categorySchema),
@@ -47,6 +56,7 @@ const exportDataSchema = z.object({
   currencies: z.array(currencySchema),
   debtors: z.array(debtorSchema),
   debts: z.array(debtSchema),
+  budgets: z.array(budgetSchema).default([]),
 });
 
 const exportEnvelopeSchema = z.object({
@@ -55,8 +65,12 @@ const exportEnvelopeSchema = z.object({
   data: exportDataSchema,
 });
 
+export type ExportData = z.infer<typeof exportDataSchema>;
+export type ExportEnvelope = z.infer<typeof exportEnvelopeSchema>;
+
 export interface ValidationResult {
   success: boolean;
+  data?: ExportEnvelope;
   error?: string;
 }
 
@@ -67,7 +81,7 @@ export interface ValidationResult {
 export const validateExportEnvelope = (json: unknown): ValidationResult => {
   const result = exportEnvelopeSchema.safeParse(json);
   if (result.success) {
-    return {success: true};
+    return {success: true, data: result.data};
   }
 
   const firstIssue = result.error.issues[0];

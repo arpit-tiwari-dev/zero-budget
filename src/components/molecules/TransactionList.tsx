@@ -1,22 +1,20 @@
 import {RefreshControl, View} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import React, {useCallback, useMemo, useRef, memo} from 'react';
-import Animated, {SharedValue, useAnimatedStyle, interpolate} from 'react-native-reanimated';
 import {useTranslation} from 'react-i18next';
 import useThemeColors, {Colors} from '../../hooks/useThemeColors';
+import type {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Icon from '../atoms/Icons';
 import {formatDate, formatCalendar} from '../../utils/dateUtils';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import type {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import {navigate} from '../../utils/navigationUtils';
 import {deleteExpenseById, ExpenseData as ExpenseDocType} from '../../watermelondb/services';
-import {useDispatch} from 'react-redux';
-import {fetchExpenses, fetchExpensesByMonth, invalidateExpenseCache} from '../../redux/slice/expenseDataSlice';
+import {useAppDispatch} from '../../redux/hooks';
+import {fetchExpenses, fetchExpensesByMonth, invalidateExpenseCache, fetchEverydayExpenses} from '../../redux/slice/expenseDataSlice';
 import PrimaryText from '../atoms/PrimaryText';
-import {fetchEverydayExpenses} from '../../redux/slice/everydayExpenseDataSlice';
+import SwipeableRow from '../atoms/SwipeableRow';
 import useFormatAmount from '../../hooks/useFormatAmount';
 import {FlashList, useRecyclingState} from '@shopify/flash-list';
-import {AppDispatch} from '../../redux/store';
+import type {AppDispatch} from '../../redux/store';
 import {gs} from '../../styles/globalStyles';
 
 interface CategoryInfo {
@@ -72,104 +70,27 @@ interface GroupedExpense {
   label: string;
 }
 
-const ACTION_WIDTH = 50;
-const EDGE_INSET = 16;
-
-const SwipeAction = ({
-  progress,
-  iconName,
-  iconColor,
-  backgroundColor,
-  side,
-  onPress,
-  edgeToEdge = false,
-}: {
-  progress: SharedValue<number>;
-  iconName: string;
-  iconColor: string;
-  backgroundColor: string;
-  side: 'left' | 'right';
-  onPress: () => void;
-  edgeToEdge?: boolean;
-}) => {
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.6, 1], [0, 0.8, 1]),
-    transform: [{scale: interpolate(progress.value, [0, 1], [0.6, 1])}],
-  }));
-
-  const extraPadding = edgeToEdge ? EDGE_INSET : 0;
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[
-        gs.center,
-        {
-          flex: 1,
-          width: ACTION_WIDTH + extraPadding,
-          paddingLeft: side === 'left' ? extraPadding : 0,
-          paddingRight: side === 'right' ? extraPadding : 0,
-        },
-      ]}>
-      <Animated.View style={[gs.size40, gs.roundedFull, gs.center, animatedStyle, {backgroundColor}]}>
-        <Icon name={iconName} size={18} color={iconColor} />
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
-
 const ExpenseRow: React.FC<ExpenseRowProps> = React.memo(
   ({expense, colors, onEdit, onDelete, openSwipeableRef, edgeToEdge, tutorialSwipeRef}) => {
-    const swipeableRef = useRef<SwipeableMethods | null>(null);
     const formatAmount = useFormatAmount();
 
-    const combinedRef = tutorialSwipeRef ?? swipeableRef;
+    const handleEdit = useCallback(() => {
+      onEdit(expense);
+    }, [onEdit, expense]);
 
-    const handleSwipeWillOpen = useCallback(() => {
-      if (openSwipeableRef.current && openSwipeableRef.current !== combinedRef.current) {
-        openSwipeableRef.current.close();
-      }
-      openSwipeableRef.current = combinedRef.current;
-    }, [openSwipeableRef, combinedRef]);
+    const handleDelete = useCallback(() => {
+      onDelete(String(expense.id));
+    }, [onDelete, expense.id]);
 
     return (
       <View style={gs.mb5}>
-        <ReanimatedSwipeable
-          ref={combinedRef}
-          renderLeftActions={(progress, _translation, swipeableMethods) => (
-            <SwipeAction
-              progress={progress}
-              iconName="pencil"
-              iconColor={colors.accentGreen}
-              backgroundColor={colors.lightAccent}
-              side="left"
-              edgeToEdge={edgeToEdge}
-              onPress={() => {
-                onEdit(expense);
-                swipeableMethods.close();
-              }}
-            />
-          )}
-          renderRightActions={(progress, _translation, swipeableMethods) => (
-            <SwipeAction
-              progress={progress}
-              iconName="trash-2"
-              iconColor={colors.accentOrange}
-              backgroundColor={colors.lightAccent}
-              side="right"
-              edgeToEdge={edgeToEdge}
-              onPress={() => {
-                onDelete(String(expense.id));
-                swipeableMethods.close();
-              }}
-            />
-          )}
-          onSwipeableWillOpen={handleSwipeWillOpen}
-          friction={2}
-          overshootLeft={false}
-          overshootRight={false}
-          overshootFriction={8}>
+        <SwipeableRow
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          colors={colors}
+          swipeRef={tutorialSwipeRef}
+          openSwipeableRef={openSwipeableRef}
+          edgeToEdge={edgeToEdge}>
           <View
             style={[
               gs.rounded12,
@@ -203,7 +124,7 @@ const ExpenseRow: React.FC<ExpenseRowProps> = React.memo(
               </PrimaryText>
             </View>
           </View>
-        </ReanimatedSwipeable>
+        </SwipeableRow>
       </View>
     );
   },
@@ -245,6 +166,7 @@ const InlineUndo: React.FC<{
 const TransactionItem: React.FC<TransactionItemProps> = React.memo(
   ({expense: initialExpense, colors, dispatch, label, targetDate, targetMonth, openSwipeableRef, edgeToEdge, tutorialSwipeRef, isFirstGroup}) => {
     const deletionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const formatAmount = useFormatAmount();
 
     const [expenses, setExpenses] = useRecyclingState<Array<Expense>>(initialExpense || [], [initialExpense], () => {
       if (deletionTimeoutRef.current) {
@@ -259,7 +181,7 @@ const TransactionItem: React.FC<TransactionItemProps> = React.memo(
         expenseId: String(expense.id),
         expenseTitle: expense.title,
         expenseDescription: expense.description ?? '',
-        category: expense.category,
+        category: expense.category ?? {name: '', icon: '', color: ''},
         expenseDate: expense.date,
         expenseAmount: expense.amount,
       });
@@ -303,11 +225,21 @@ const TransactionItem: React.FC<TransactionItemProps> = React.memo(
       deletedItemRef.current = null;
     }, [setDeletedItemId]);
 
+    const dayTotal = useMemo(
+      () => expenses.reduce((sum, e) => sum + e.amount, 0),
+      [expenses],
+    );
+
     return (
       <View>
-        <PrimaryText size={12} weight="semibold" color={colors.secondaryText} style={[gs.mb8, gs.mt15, edgeToEdge && gs.px16]}>
-          {label}
-        </PrimaryText>
+        <View style={[gs.rowBetweenCenter, gs.mb8, gs.mt15, edgeToEdge && gs.px16]}>
+          <PrimaryText size={12} weight="semibold" color={colors.secondaryText}>
+            {label}
+          </PrimaryText>
+          <PrimaryText size={12} weight="semibold" color={colors.secondaryText} variant="number">
+            {formatAmount(dayTotal)}
+          </PrimaryText>
+        </View>
         {expenses.map((item, index) =>
           String(item.id) === deletedItemId ? (
             <InlineUndo key={String(item.id)} colors={colors} onUndo={handleUndo} edgeToEdge={edgeToEdge} />
@@ -342,7 +274,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   tutorialSwipeRef,
 }) => {
   const colors = useThemeColors();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const openSwipeableRef = useRef<{close: () => void} | null>(null);
 
   const groupedData: GroupedExpense[] = useMemo(() => {

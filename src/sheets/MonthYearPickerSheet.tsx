@@ -1,7 +1,7 @@
-import {ScrollView, TouchableOpacity, View} from 'react-native';
+import {TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {SheetManager, SheetProps} from 'react-native-actions-sheet';
+import {SheetManager, SheetProps, ScrollView} from 'react-native-actions-sheet';
 import useThemeColors from '../hooks/useThemeColors';
 import {CustomBottomSheet} from '../components/atoms/CustomBottomSheet';
 import PrimaryText from '../components/atoms/PrimaryText';

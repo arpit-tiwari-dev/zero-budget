@@ -5,6 +5,7 @@ import Expense from '../models/Expense';
 import Currency from '../models/Currency';
 import Debtor from '../models/Debtor';
 import Debt from '../models/Debt';
+import Budget from '../models/Budget';
 import {sanitizeString, DEFAULTS} from '../../backend/sanitize';
 import type {ExportData} from '../../backend/export/format';
 
@@ -16,7 +17,7 @@ export type {ExportData} from '../../backend/export/format';
  */
 export const getAllData = async (): Promise<ExportData | null> => {
   try {
-    const [users, categories, expenses, currencies, debtors, debts] =
+    const [users, categories, expenses, currencies, debtors, debts, budgets] =
       await Promise.all([
         database.get<User>('users').query().fetch(),
         database.get<Category>('categories').query().fetch(),
@@ -24,6 +25,7 @@ export const getAllData = async (): Promise<ExportData | null> => {
         database.get<Currency>('currencies').query().fetch(),
         database.get<Debtor>('debtors').query().fetch(),
         database.get<Debt>('debts').query().fetch(),
+        database.get<Budget>('budgets').query().fetch(),
       ]);
 
     const categoryMap = new Map<string, string>();
@@ -43,6 +45,7 @@ export const getAllData = async (): Promise<ExportData | null> => {
       })),
       categories: categories.map(c => ({
         name: c.name,
+        categoryStatus: c.categoryStatus,
         icon: sanitizeString(c.icon, DEFAULTS.icon),
         color: sanitizeString(c.color, DEFAULTS.color),
       })),
@@ -60,6 +63,7 @@ export const getAllData = async (): Promise<ExportData | null> => {
       })),
       debtors: debtors.map(d => ({
         title: d.title,
+        debtorStatus: d.debtorStatus,
         icon: sanitizeString(d.icon, DEFAULTS.icon),
         type: d.type ?? DEFAULTS.type,
         color: sanitizeString(d.color, DEFAULTS.color),
@@ -70,6 +74,11 @@ export const getAllData = async (): Promise<ExportData | null> => {
         debtor: {title: debtorMap.get(d.debtorId) ?? 'Unknown'},
         date: d.date,
         type: d.type,
+      })),
+      budgets: budgets.map(b => ({
+        amount: b.amount,
+        month: b.month,
+        budgetType: b.budgetType,
       })),
     };
   } catch (error) {

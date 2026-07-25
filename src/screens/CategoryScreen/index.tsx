@@ -2,8 +2,6 @@ import {RefreshControl, View} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import React, {useCallback, useRef, memo} from 'react';
 import {useTranslation} from 'react-i18next';
-import Animated, {SharedValue, useAnimatedStyle, interpolate} from 'react-native-reanimated';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import type {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import {navigate} from '../../utils/navigationUtils';
 import Icon from '../../components/atoms/Icons';
@@ -13,43 +11,12 @@ import useSwipeTutorial from '../../hooks/useSwipeTutorial';
 import SwipeTutorialTooltip from '../../components/atoms/SwipeTutorialTooltip';
 import PrimaryView from '../../components/atoms/PrimaryView';
 import PrimaryText from '../../components/atoms/PrimaryText';
+import SwipeableRow from '../../components/atoms/SwipeableRow';
 import {CategoryData as Category} from '../../watermelondb/services';
 import EmptyState from '../../components/atoms/EmptyState';
 import {Colors} from '../../hooks/useThemeColors';
 import {FlashList} from '@shopify/flash-list';
 import {gs, hitSlop} from '../../styles/globalStyles';
-
-const ACTION_WIDTH = 50;
-
-const SwipeAction = memo(({
-  progress,
-  iconName,
-  iconColor,
-  backgroundColor,
-  onPress,
-}: {
-  progress: SharedValue<number>;
-  iconName: string;
-  iconColor: string;
-  backgroundColor: string;
-  onPress: () => void;
-}) => {
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.6, 1], [0, 0.8, 1]),
-    transform: [{scale: interpolate(progress.value, [0, 1], [0.6, 1])}],
-  }));
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[gs.center, {flex: 1, width: ACTION_WIDTH}]}>
-      <Animated.View style={[gs.size40, gs.roundedFull, gs.center, animatedStyle, {backgroundColor}]}>
-        <Icon name={iconName} size={18} color={iconColor} />
-      </Animated.View>
-    </TouchableOpacity>
-  );
-});
 
 const CategoryRow = memo(({
   category,
@@ -66,50 +33,22 @@ const CategoryRow = memo(({
   openSwipeableRef: React.RefObject<{close: () => void} | null>;
   tutorialSwipeRef?: React.RefObject<SwipeableMethods | null>;
 }) => {
-  const swipeableRef = useRef<SwipeableMethods | null>(null);
+  const handleEdit = useCallback(() => {
+    onEdit(String(category.id), category.name, category.icon ?? '', category.color ?? colors.primaryText);
+  }, [onEdit, category, colors.primaryText]);
 
-  const combinedRef = tutorialSwipeRef ?? swipeableRef;
-
-  const handleSwipeWillOpen = useCallback(() => {
-    if (openSwipeableRef.current && openSwipeableRef.current !== combinedRef.current) {
-      openSwipeableRef.current.close();
-    }
-    openSwipeableRef.current = combinedRef.current;
-  }, [openSwipeableRef, combinedRef]);
+  const handleDelete = useCallback(() => {
+    onDelete(category.id);
+  }, [onDelete, category.id]);
 
   return (
     <View style={gs.mb5}>
-      <ReanimatedSwipeable
-        ref={combinedRef}
-        renderLeftActions={(progress, _translation, swipeableMethods) => (
-          <SwipeAction
-            progress={progress}
-            iconName="pencil"
-            iconColor={colors.accentGreen}
-            backgroundColor={colors.lightAccent}
-            onPress={() => {
-              onEdit(String(category.id), category.name, category.icon ?? '', category.color ?? colors.primaryText);
-              swipeableMethods.close();
-            }}
-          />
-        )}
-        renderRightActions={(progress, _translation, swipeableMethods) => (
-          <SwipeAction
-            progress={progress}
-            iconName="trash-2"
-            iconColor={colors.accentOrange}
-            backgroundColor={colors.lightAccent}
-            onPress={() => {
-              onDelete(category.id);
-              swipeableMethods.close();
-            }}
-          />
-        )}
-        onSwipeableWillOpen={handleSwipeWillOpen}
-        friction={2}
-        overshootLeft={false}
-        overshootRight={false}
-        overshootFriction={8}>
+      <SwipeableRow
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        colors={colors}
+        swipeRef={tutorialSwipeRef}
+        openSwipeableRef={openSwipeableRef}>
         <View
           style={[
             gs.rounded12,
@@ -131,7 +70,7 @@ const CategoryRow = memo(({
             {category.name}
           </PrimaryText>
         </View>
-      </ReanimatedSwipeable>
+      </SwipeableRow>
     </View>
   );
 });
@@ -176,7 +115,7 @@ const CategoryScreen = () => {
             showsVerticalScrollIndicator={false}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             ListEmptyComponent={ListEmptyComponent}
-            contentContainerStyle={{...gs.px16, ...gs.pb80}}
+            contentContainerStyle={{...gs.px16, ...gs.pb100}}
           />
         </View>
       </PrimaryView>

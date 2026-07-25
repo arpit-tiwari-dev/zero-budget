@@ -14,7 +14,7 @@ const initialState: IndividualDebtorState = {
   error: null,
 };
 
-export const fetchIndividualDebtor = createAsyncThunk(
+export const fetchIndividualDebtor = createAsyncThunk<DebtorDocType | null, string, {state: RootState}>(
   'individualDebtor/fetchById',
   async (debtorId: string, {rejectWithValue}) => {
     try {

@@ -86,12 +86,20 @@
     "greeting": "Hey, {{name}}",
     "transactionCount_one": "{{count}} transaction",
     "transactionCount_other": "{{count}} transactions",
+    "today": "Today",
+    "ofBudget": "of budget",
+    "remaining": "left",
+    "perDay": "day",
+    "leftToday": "left today",
+    "overToday": "over today",
     "addTransaction": "Add new transaction"
   },
   "reports": {
     "title": "Reports",
     "total": "Total",
     "avgPerDay": "Avg/Day",
+    "budget": "Budget",
+    "setBudget": "Set a monthly budget",
     "less": "Less",
     "more": "More"
   },
@@ -135,6 +143,9 @@
     "dateLabel": "Date",
     "categoryLabel": "Category",
     "addCategoryButton": "Add Category",
+    "dailyBudget": "Daily: {{amount}}",
+    "dailyRemaining": "{{amount}} left today",
+    "dailyExceeded": "{{amount}} over today",
     "deleted": "Transaction deleted",
     "totalSpent": "Total Spent",
     "noTransactionsOnDate": "No transactions on {{date}}",
@@ -166,6 +177,8 @@
   },
   "settings": {
     "title": "Settings",
+    "dataWarningTitle": "Some data couldn't be updated",
+    "dataWarningMessage": "A background update to your categories didn't finish. Your data is safe. Try exporting a backup and reinstalling, or contact support if this persists.",
     "sectionPersonalization": "PERSONALIZATION",
     "sectionData": "YOUR DATA",
     "sectionAbout": "ABOUT",
@@ -175,6 +188,8 @@
     "themeSystem": "System",
     "name": "Name",
     "currency": "Currency",
+    "budget": "Monthly Budget",
+    "budgetSubtitle": "Set a spending limit for the month",
     "exportData": "Export data",
     "exportSubtitle": "Import on a new device later",
     "deleteAllData": "Delete all data",
@@ -197,7 +212,8 @@
     "exportSuccess": "Your data is successfully exported in Downloads folder",
     "exportError": "There is an error in exporting your data",
     "storagePermission": "You need to manually give permission for the storage to download your data",
-    "language": "Language"
+    "language": "Language",
+    "currentLanguage": "English"
   },
   "sheets": {
     "selectTheme": "Select Theme",
@@ -208,7 +224,18 @@
     "searchCurrency": "Search currency...",
     "selectIcon": "Select Icon",
     "searchIcons": "Search Icons",
-    "selectColor": "Select Color"
+    "noIconsFound": "No icons found",
+    "selectColor": "Select Color",
+    "setBudget": "Set Monthly Budget",
+    "monthlyBudgetLabel": "Monthly spending limit",
+    "budgetHint": "You'll see a progress bar on your home screen tracking spending against this limit.",
+    "budgetForMonth": "For {{month}}",
+    "budgetForEveryMonth": "Applies to all months",
+    "everyMonth": "Apply every month",
+    "everyMonthHint": "Use this budget for all months unless overridden",
+    "setBudgetButton": "Set Budget",
+    "removeBudget": "Remove Budget",
+    "moreLanguages": "More languages coming soon"
   },
   "emptyState": {
     "transactions": "No transactions yet",

@@ -1,7 +1,7 @@
 import {TextInput, TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {SheetManager, SheetProps} from 'react-native-actions-sheet';
+import {SheetManager, SheetProps, ScrollView as SheetScrollView} from 'react-native-actions-sheet';
 import {FlashList} from '@shopify/flash-list';
 import useThemeColors from '../hooks/useThemeColors';
 import {CustomBottomSheet} from '../components/atoms/CustomBottomSheet';
@@ -118,6 +118,7 @@ const CurrencyPickerSheet: React.FC<SheetProps<'currency-picker-sheet'>> = React
 
         <View style={[gs.h320, gs.my10]}>
           <FlashList
+            renderScrollComponent={SheetScrollView}
             data={filteredCurrencies}
             renderItem={renderCurrencyItem}
             numColumns={3}

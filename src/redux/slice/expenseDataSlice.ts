@@ -1,6 +1,12 @@
 import {createAsyncThunk, createEntityAdapter, createSlice} from '@reduxjs/toolkit';
 import {RootState} from '../rootReducer';
-import {ExpenseWithCategory, getAllExpensesByUserIdWithCategory, getAllExpensesByMonth} from '../../watermelondb/services';
+import {
+  ExpenseWithCategory,
+  getAllExpensesByUserIdWithCategory,
+  getAllExpensesByMonth,
+  getAllExpensesByDate,
+  getAllExpensesByCategoryAndMonth,
+} from '../../watermelondb/services';
 import {selectUserId} from './userIdSlice';
 
 const expensesAdapter = createEntityAdapter<ExpenseWithCategory>();
@@ -9,11 +15,15 @@ const initialState = expensesAdapter.getInitialState({
   isLoading: false,
   error: null as string | null,
   cachedYearMonth: null as string | null,
+  filteredExpenses: [] as ExpenseWithCategory[],
+  filterKey: null as string | null,
+  filteredLoading: false,
+  filteredError: null as string | null,
 });
 
-export const fetchExpenses = createAsyncThunk('expense/fetchAll', async (_, {getState, rejectWithValue}) => {
+export const fetchExpenses = createAsyncThunk<ExpenseWithCategory[], void, {state: RootState}>('expense/fetchAll', async (_, {getState, rejectWithValue}) => {
   try {
-    const userId = selectUserId(getState() as RootState);
+    const userId = selectUserId(getState());
     const expenses = await getAllExpensesByUserIdWithCategory(userId);
     return expenses;
   } catch (error) {
@@ -21,19 +31,46 @@ export const fetchExpenses = createAsyncThunk('expense/fetchAll', async (_, {get
   }
 });
 
-export const fetchExpensesByMonth = createAsyncThunk(
+export const fetchExpensesByMonth = createAsyncThunk<{expenses: ExpenseWithCategory[]; yearMonth: string}, string, {state: RootState}>(
   'expense/fetchByMonth',
   async (yearMonth: string, {getState, rejectWithValue}) => {
-    const state = getState() as RootState;
-    if (state.expense.cachedYearMonth === yearMonth) {
-      return null;
-    }
     try {
-      const userId = selectUserId(state);
+      const userId = selectUserId(getState());
       const expenses = await getAllExpensesByMonth(userId, yearMonth);
       return {expenses, yearMonth};
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch expenses');
+    }
+  },
+  {
+    condition: (yearMonth, {getState}) => {
+      return getState().expense.cachedYearMonth !== yearMonth;
+    },
+  },
+);
+
+export const fetchEverydayExpenses = createAsyncThunk<ExpenseWithCategory[], string, {state: RootState}>(
+  'expense/fetchByDate',
+  async (date: string, {getState, rejectWithValue}) => {
+    try {
+      const userId = selectUserId(getState());
+      const expenses = await getAllExpensesByDate(userId, date);
+      return expenses;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch everyday expenses');
+    }
+  },
+);
+
+export const fetchExpensesByCategory = createAsyncThunk<ExpenseWithCategory[], {categoryId: string; yearMonth: string}, {state: RootState}>(
+  'expense/fetchByCategory',
+  async ({categoryId, yearMonth}, {getState, rejectWithValue}) => {
+    try {
+      const userId = selectUserId(getState());
+      const expenses = await getAllExpensesByCategoryAndMonth(userId, categoryId, yearMonth);
+      return expenses;
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to fetch category expenses');
     }
   },
 );
@@ -42,9 +79,6 @@ const expenseDataSlice = createSlice({
   name: 'expense',
   initialState,
   reducers: {
-    expenseAdded: expensesAdapter.addOne,
-    expenseUpdated: expensesAdapter.updateOne,
-    expenseRemoved: expensesAdapter.removeOne,
     invalidateExpenseCache: state => {
       state.cachedYearMonth = null;
     },
@@ -72,14 +106,40 @@ const expenseDataSlice = createSlice({
       .addCase(fetchExpensesByMonth.fulfilled, (state, action) => {
         state.isLoading = false;
         state.error = null;
-        if (action.payload !== null) {
-          state.cachedYearMonth = action.payload.yearMonth;
-          expensesAdapter.setAll(state, action.payload.expenses);
-        }
+        state.cachedYearMonth = action.payload.yearMonth;
+        expensesAdapter.setAll(state, action.payload.expenses);
       })
       .addCase(fetchExpensesByMonth.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      .addCase(fetchEverydayExpenses.pending, state => {
+        state.filteredLoading = true;
+        state.filteredError = null;
+      })
+      .addCase(fetchEverydayExpenses.fulfilled, (state, action) => {
+        state.filteredLoading = false;
+        state.filteredError = null;
+        state.filterKey = action.meta.arg;
+        state.filteredExpenses = action.payload;
+      })
+      .addCase(fetchEverydayExpenses.rejected, (state, action) => {
+        state.filteredLoading = false;
+        state.filteredError = action.payload as string;
+      })
+      .addCase(fetchExpensesByCategory.pending, state => {
+        state.filteredLoading = true;
+        state.filteredError = null;
+      })
+      .addCase(fetchExpensesByCategory.fulfilled, (state, action) => {
+        state.filteredLoading = false;
+        state.filteredError = null;
+        state.filterKey = `${action.meta.arg.categoryId}:${action.meta.arg.yearMonth}`;
+        state.filteredExpenses = action.payload;
+      })
+      .addCase(fetchExpensesByCategory.rejected, (state, action) => {
+        state.filteredLoading = false;
+        state.filteredError = action.payload as string;
       });
   },
 });
@@ -96,6 +156,12 @@ export const selectExpenseLoading = (state: RootState) => state.expense.isLoadin
 export const selectExpenseError = (state: RootState) => state.expense.error;
 export const selectCachedYearMonth = (state: RootState) => state.expense.cachedYearMonth;
 
-export const {expenseAdded, expenseUpdated, expenseRemoved, invalidateExpenseCache} = expenseDataSlice.actions;
+export const selectFilteredExpenses = (state: RootState) => state.expense.filteredExpenses;
+export const selectFilteredExpenseIds = (state: RootState) => state.expense.filteredExpenses.map(e => e.id);
+export const selectFilteredExpenseLoading = (state: RootState) => state.expense.filteredLoading;
+export const selectFilteredExpenseError = (state: RootState) => state.expense.filteredError;
+export const selectFilterKey = (state: RootState) => state.expense.filterKey;
+
+export const {invalidateExpenseCache} = expenseDataSlice.actions;
 
 export default expenseDataSlice.reducer;

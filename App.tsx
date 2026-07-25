@@ -16,6 +16,7 @@ import ErrorBoundary from './src/components/atoms/ErrorBoundary';
 import PrimaryText from './src/components/atoms/PrimaryText';
 import {initBackend} from './src/backend';
 import {getDatabaseError} from './src/watermelondb/database';
+import {appendErrorLog} from './src/utils/errorLog';
 import './src/sheets/sheets';
 import './src/utils/globalErrorHandler';
 
@@ -54,7 +55,9 @@ const App = () => {
 
   useEffect(() => {
     initBackend();
-    if (getDatabaseError()) {
+    const dbError = getDatabaseError();
+    if (dbError) {
+      appendErrorLog(dbError, true);
       setDbFailed(true);
     }
   }, []);

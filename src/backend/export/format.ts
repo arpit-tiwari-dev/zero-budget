@@ -9,6 +9,8 @@
  *   v3          — WCAG 2.2 color compliance. Remaps old category/debtor colors
  *                 to the new accessible palette. DB schema stays at v2 (no schema
  *                 changes, only data-level color values).
+ *   v4          — Added budgets table (DB schema v3). Exports now include
+ *                 budget entries with amount, month, budgetType.
  *
  * RULES:
  *   - Bump when the ExportData shape or data semantics change.
@@ -20,47 +22,6 @@
  *   Example: zero_v3_20260321163018.json
  *   The version in the filename matches the version inside the JSON.
  */
-export const CURRENT_EXPORT_VERSION = 3;
+export const CURRENT_EXPORT_VERSION = 4;
 
-export interface ExportData {
-  users: Array<{
-    username: string;
-    email: string;
-  }>;
-  categories: Array<{
-    name: string;
-    icon?: string;
-    color?: string;
-  }>;
-  expenses: Array<{
-    title: string;
-    amount: number;
-    description?: string;
-    category: {name: string};
-    date: string;
-  }>;
-  currencies: Array<{
-    code: string;
-    symbol: string;
-    name: string;
-  }>;
-  debtors: Array<{
-    title: string;
-    icon?: string;
-    type?: string;
-    color?: string;
-  }>;
-  debts: Array<{
-    amount: number;
-    description: string;
-    debtor: {title: string};
-    date: string;
-    type: string;
-  }>;
-}
-
-export interface ExportEnvelope {
-  key: string;
-  version: number;
-  data: ExportData;
-}
+export type {ExportData, ExportEnvelope} from './validate';

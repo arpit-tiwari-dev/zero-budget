@@ -14,7 +14,7 @@ export const createUser = async (
     await database.get<User>('users').create(user => {
       user._raw.id = id;
       user.username = username;
-      user.email = email || 'null';
+      user.email = email || '';
     });
   });
   return id;

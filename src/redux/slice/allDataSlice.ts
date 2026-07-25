@@ -14,7 +14,7 @@ const initialState: AllDataState = {
   error: null,
 };
 
-export const fetchAllData = createAsyncThunk('allData/fetchAll', async (_, {rejectWithValue}) => {
+export const fetchAllData = createAsyncThunk<ExportData | null, void, {state: RootState}>('allData/fetchAll', async (_, {rejectWithValue}) => {
   try {
     const allData = await getAllData();
     return allData;

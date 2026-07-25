@@ -2,6 +2,7 @@ import React from 'react';
 import SplashScreen from '../screens/SplashScreen';
 import PersonalizeScreen from '../screens/PersonalizeScreen';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import type {OnboardingStackParamList} from './types';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import ChooseCurrencyScreen from '../screens/ChooseCurrencyScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
@@ -11,7 +12,7 @@ const screenOptions = {
   headerShown: false,
 };
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
 const OnboardingStack = () => {
   return (

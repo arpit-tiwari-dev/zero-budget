@@ -52,6 +52,9 @@ const LanguagePickerSheet: React.FC<SheetProps<'language-picker-sheet'>> = React
             </View>
           </TouchableOpacity>
         ))}
+        <PrimaryText size={12} color={colors.secondaryText} style={[gs.mt10, gs.textCenter]}>
+          {t('sheets.moreLanguages')}
+        </PrimaryText>
         <TouchableOpacity
           onPress={handleConfirm}
           activeOpacity={0.7}

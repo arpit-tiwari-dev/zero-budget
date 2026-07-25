@@ -1,14 +1,20 @@
 import {NavigationContainerRef, CommonActions} from '@react-navigation/native';
+import type {HomeStackParamList, OnboardingStackParamList} from '../navigation/types';
 
-let navigationRef: NavigationContainerRef<any> | null = null;
+type AllScreens = HomeStackParamList & OnboardingStackParamList;
 
-export const setNavigationRef = (ref: NavigationContainerRef<any>) => {
+let navigationRef: NavigationContainerRef<HomeStackParamList> | null = null;
+
+export const setNavigationRef = (ref: NavigationContainerRef<HomeStackParamList>) => {
   navigationRef = ref;
 };
 
-export const navigate = (name: string, params?: object) => {
+export const navigate = <T extends keyof AllScreens>(
+  name: T,
+  ...args: AllScreens[T] extends undefined ? [] : [AllScreens[T]]
+) => {
   if (navigationRef) {
-    navigationRef.dispatch(CommonActions.navigate({name, params}));
+    navigationRef.dispatch(CommonActions.navigate({name: name as string, params: args[0]}));
   } else if (__DEV__) {
     console.error(
       'Navigation reference is not set. Make sure to call setNavigationRef.',

@@ -1,13 +1,15 @@
 import {TouchableOpacity, View, useWindowDimensions} from 'react-native';
 import React, {useCallback, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {SheetManager, SheetProps} from 'react-native-actions-sheet';
+import {SheetManager, SheetProps, ScrollView as SheetScrollView} from 'react-native-actions-sheet';
 import {FlashList} from '@shopify/flash-list';
 import {CustomBottomSheet} from '../components/atoms/CustomBottomSheet';
 import useThemeColors from '../hooks/useThemeColors';
 import CustomInput from '../components/atoms/CustomInput';
 import Icon from '../components/atoms/Icons';
+import PrimaryText from '../components/atoms/PrimaryText';
 import {CATEGORY_ICONS} from '../constants/categoryIcons';
+import {iconKeywords} from '../constants/iconKeywords';
 import {gs} from '../styles/globalStyles';
 
 const IconPickerSheet: React.FC<SheetProps<'icon-picker-sheet'>> = React.memo(props => {
@@ -21,8 +23,16 @@ const IconPickerSheet: React.FC<SheetProps<'icon-picker-sheet'>> = React.memo(pr
   const iconSize = (screenWidth * 0.85) / iconsPerRow;
 
   const filteredIcons = useMemo(() => {
-    const lowerCaseSearch = searchText.toLowerCase();
-    return CATEGORY_ICONS.filter(iconName => iconName.toLowerCase().includes(lowerCaseSearch));
+    if (!searchText) return CATEGORY_ICONS;
+    const normalized = searchText.toLowerCase().replace(/[-\s]/g, '');
+    return CATEGORY_ICONS.filter(iconName => {
+      if (iconName.toLowerCase().replace(/[-\s]/g, '').includes(normalized)) return true;
+      const keywords = iconKeywords[iconName];
+      if (keywords) {
+        return keywords.some(kw => kw.replace(/[-\s]/g, '').includes(normalized));
+      }
+      return false;
+    });
   }, [searchText]);
 
   const handleSelectIcon = useCallback(
@@ -80,12 +90,22 @@ const IconPickerSheet: React.FC<SheetProps<'icon-picker-sheet'>> = React.memo(pr
       </View>
 
       <View style={[gs.h350, gs.px10]}>
-        <FlashList
-          data={filteredIcons}
-          renderItem={renderIconItem}
-          numColumns={6}
-          keyExtractor={(iconItem: string) => iconItem}
-        />
+        {filteredIcons.length === 0 ? (
+          <View style={[gs.flex1, gs.center]}>
+            <Icon name="search" size={40} color={colors.secondaryText} />
+            <PrimaryText size={14} color={colors.secondaryText} style={gs.mt10}>
+              {t('sheets.noIconsFound')}
+            </PrimaryText>
+          </View>
+        ) : (
+          <FlashList
+            renderScrollComponent={SheetScrollView}
+            data={filteredIcons}
+            renderItem={renderIconItem}
+            numColumns={6}
+            keyExtractor={(iconItem: string) => iconItem}
+          />
+        )}
       </View>
     </CustomBottomSheet>
   );

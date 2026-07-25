@@ -1,6 +1,6 @@
-import {useDispatch} from 'react-redux';
 import useThemeColors from '../../hooks/useThemeColors';
 import {useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {Linking, Platform} from 'react-native';
 import {requestStoragePermission} from '../../utils/dataUtils';
 import {useDialog} from '../../context/DialogContext';
@@ -20,10 +20,10 @@ import {fetchDebtors} from '../../redux/slice/debtorDataSlice';
 import {fetchUserData} from '../../redux/slice/userIdSlice';
 import {fetchCurrency} from '../../redux/slice/currencyDataSlice';
 import {fetchExpenses} from '../../redux/slice/expenseDataSlice';
-import {fetchAllDebts} from '../../redux/slice/allDebtDataSlice';
+import {fetchAllDebts} from '../../redux/slice/debtDataSlice';
 import StorageService from '../../utils/asyncStorageService';
 import {setIsOnboarded} from '../../redux/slice/isOnboardedSlice';
-import {AppDispatch} from '../../redux/store';
+import {useAppDispatch} from '../../redux/hooks';
 import {upgradeExportData} from '../../backend/export/upgrader';
 import type {ExportData} from '../../backend/export/format';
 import {validateExportEnvelope} from '../../backend/export/validate';
@@ -41,11 +41,12 @@ interface SyncStatus {
 
 const useExistingUser = () => {
   const colors = useThemeColors();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const {showDialog} = useDialog();
+  const {t} = useTranslation();
 
   const [fileName, setFileName] = useState<string | null>(null);
-  const [uploadMessage, setUploadMessage] = useState('Upload your file');
+  const [uploadMessage, setUploadMessage] = useState(t('existingUser.uploadFile'));
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSyncComplete, setIsSyncComplete] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -221,7 +222,7 @@ const useExistingUser = () => {
       if (!storagePermissionGranted) {
         const confirmed = await showDialog({
           type: 'warning',
-          message: 'Storage permission is required to upload your backup file',
+          message: t('existingUser.storagePermissionRequired'),
         });
         if (confirmed) {
           Linking.openSettings();
@@ -237,7 +238,7 @@ const useExistingUser = () => {
       const {0: res} = result;
       const path = normalizePath(res.uri);
       if (!path) {
-        setUploadMessage('Invalid file path');
+        setUploadMessage(t('existingUser.invalidFilePath'));
         return;
       }
 
@@ -247,26 +248,26 @@ const useExistingUser = () => {
       try {
         jsonData = JSON.parse(fileContent);
       } catch {
-        setUploadMessage('File is not valid JSON. Please select a zero export file.');
+        setUploadMessage(t('existingUser.invalidJson'));
         return;
       }
 
       const validation = validateExportEnvelope(jsonData);
       if (!validation.success) {
-        setUploadMessage(validation.error ?? 'This file is not a valid Zero export.');
+        setUploadMessage(validation.error ?? t('existingUser.invalidExport'));
         return;
       }
 
       const parsed = jsonData as {key: string; version?: number; data: ImportedData};
       if (!isValidKey(parsed.key)) {
-        setUploadMessage('Invalid key. Please upload a valid zero export file.');
+        setUploadMessage(t('existingUser.invalidKey'));
         return;
       }
 
       const data: ImportedData = upgradeExportData(parsed);
 
       setFileName(res.name ?? 'data.json');
-      setUploadMessage('Syncing your data...');
+      setUploadMessage(t('existingUser.syncingData'));
       setIsSyncing(true);
 
       setSyncStatus(prev => ({...prev, user: 'syncing'}));
@@ -285,14 +286,14 @@ const useExistingUser = () => {
 
       setIsSyncing(false);
       setIsSyncComplete(true);
-      setUploadMessage('All data synced successfully!');
+      setUploadMessage(t('existingUser.allDataSynced'));
     } catch (error) {
       if (__DEV__) {
         console.error('Error importing data:', error);
       }
       setIsSyncing(false);
-      setSyncError('Failed to sync data. Please try again.');
-      setUploadMessage('Error syncing data. Try again.');
+      setSyncError(t('existingUser.syncFailed'));
+      setUploadMessage(t('existingUser.syncError'));
     }
   };
 

@@ -1,4 +1,4 @@
-import {createSlice} from '@reduxjs/toolkit';
+import {createSlice, type PayloadAction} from '@reduxjs/toolkit';
 import {RootState} from '../rootReducer';
 import StorageService from '../../utils/asyncStorageService';
 
@@ -20,7 +20,7 @@ const isOnboardedSlice = createSlice({
   name: 'userOnboarding',
   initialState,
   reducers: {
-    setIsOnboarded: (state, action) => {
+    setIsOnboarded: (state, action: PayloadAction<boolean>) => {
       state.isOnboarded = action.payload;
     },
   },

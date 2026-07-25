@@ -1,3 +1,32 @@
+/**
+ * CustomBottomSheet — themed wrapper around react-native-actions-sheet.
+ *
+ * ## Scrollable content inside sheets
+ *
+ * The sheet's drag-to-dismiss gesture conflicts with inner ScrollView /
+ * FlashList scroll gestures. Without coordination the user either can't
+ * scroll the list or can't swipe the sheet away.
+ *
+ * ### For ScrollView / FlatList
+ * Import `ScrollView` or `FlatList` from `react-native-actions-sheet`:
+ * ```ts
+ * import {ScrollView} from 'react-native-actions-sheet';
+ * <ScrollView>...</ScrollView>
+ * ```
+ *
+ * ### For FlashList
+ * Pass the library's `ScrollView` as the scroll component:
+ * ```ts
+ * import {ScrollView as SheetScrollView} from 'react-native-actions-sheet';
+ * import {FlashList} from '@shopify/flash-list';
+ *
+ * <FlashList renderScrollComponent={SheetScrollView} data={items} ... />
+ * ```
+ *
+ * This works on both iOS and Android. See `IconPickerSheet.tsx` for a
+ * complete reference.
+ */
+
 import React, {useCallback, useMemo, ReactNode} from 'react';
 import {View, TouchableOpacity, ViewStyle, StyleProp} from 'react-native';
 import ActionSheet, {SheetManager} from 'react-native-actions-sheet';

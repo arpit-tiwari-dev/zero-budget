@@ -2,6 +2,7 @@ import {Q} from '@nozbe/watermelondb';
 import {nanoid} from 'nanoid';
 import {database} from '../database';
 import Debtor from '../models/Debtor';
+import Debt from '../models/Debt';
 import {sanitizeString, DEFAULTS} from '../../backend/sanitize';
 
 // Type for debtor data - all properties initialized for Hidden Class optimization
@@ -59,7 +60,14 @@ export const softDeleteDebtorById = async (debtorId: string): Promise<void> => {
 export const deleteDebtorById = async (debtorId: string): Promise<void> => {
   await database.write(async () => {
     const debtor = await database.get<Debtor>('debtors').find(debtorId);
-    await debtor.destroyPermanently();
+    const debts = await database
+      .get<Debt>('debts')
+      .query(Q.where('debtor_id', debtorId))
+      .fetch();
+    await database.batch(
+      ...debts.map(debt => debt.prepareDestroyPermanently()),
+      debtor.prepareDestroyPermanently(),
+    );
   });
 };
 
@@ -83,10 +91,10 @@ export const updateDebtorById = async (
         d.type = newType;
       }
       if (newIcon !== undefined) {
-        d.icon = newIcon;
+        d.icon = sanitizeString(newIcon, DEFAULTS.icon);
       }
       if (newColor !== undefined) {
-        d.color = newColor;
+        d.color = sanitizeString(newColor, DEFAULTS.color);
       }
     });
   });

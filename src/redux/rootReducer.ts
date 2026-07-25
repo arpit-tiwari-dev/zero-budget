@@ -7,11 +7,10 @@ import categoryReducer from './slice/categoryDataSlice';
 import expenseReducer from './slice/expenseDataSlice';
 import debtorReducer from './slice/debtorDataSlice';
 import debtReducer from './slice/debtDataSlice';
-import allDebtReducer from './slice/allDebtDataSlice';
-import everydayExpenseReducer from './slice/everydayExpenseDataSlice';
 import allDataReducer from './slice/allDataSlice';
 import individualDebtorReducer from './slice/IndividualDebtorSlice';
 import monthSelectionReducer from './slice/monthSelectionSlice';
+import budgetReducer from './slice/budgetDataSlice';
 
 const rootReducer = combineReducers({
   userOnboarding: userOnboardingReducer,
@@ -22,11 +21,10 @@ const rootReducer = combineReducers({
   expense: expenseReducer,
   debtor: debtorReducer,
   debt: debtReducer,
-  allDebt: allDebtReducer,
-  everydayExpense: everydayExpenseReducer,
   allData: allDataReducer,
   individualDebtor: individualDebtorReducer,
   monthSelection: monthSelectionReducer,
+  budget: budgetReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

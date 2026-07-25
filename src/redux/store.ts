@@ -3,6 +3,11 @@ import {persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, R
 import rootReducer from './rootReducer';
 import mmkvStorage from './mmkvStorage';
 
+// Hybrid persistence strategy:
+// - redux-persist (MMKV-backed): monthSelection only — survives app restarts
+// - Sync MMKV via StorageService: isOnboarded — read at slice init, never in whitelist
+// - ThemeContext + MMKV: theme preference — managed outside Redux entirely
+// - WatermelonDB: all domain data (expenses, categories, etc.) — source of truth
 const persistConfig = {
   key: 'root',
   storage: mmkvStorage,

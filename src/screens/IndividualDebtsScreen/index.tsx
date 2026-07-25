@@ -1,6 +1,7 @@
 import {RefreshControl, TouchableOpacity, View} from 'react-native';
 import React, {useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import AppHeader from '../../components/atoms/AppHeader';
 import {goBack, navigate} from '../../utils/navigationUtils';
 import {useRoute} from '@react-navigation/native';
@@ -39,6 +40,7 @@ const IndividualDebtsScreen = () => {
   const [debtsType, setDebtsType] = useState('Borrow');
   const currentDebts = debtsType === 'Borrow' ? sortedBorrowings : sortedLendings;
   const {shouldShowTutorial, tutorialRef, dismissTutorial} = useSwipeTutorial({screen: 'debt', itemCount: currentDebts.length});
+  const insets = useSafeAreaInsets();
 
   const netColor = useMemo(() => {
     if (debtorTotal > 0) return colors.accentOrange;
@@ -169,7 +171,7 @@ const IndividualDebtsScreen = () => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         tutorialSwipeRef={tutorialRef}
       />
-      <View style={[gs.absolute, {bottom: 60}, gs.right15, gs.zIndex1]}>
+      <View style={[gs.absolute, gs.right15, gs.zIndex1, {bottom: Math.max(insets.bottom, 15) + 5}]}>
         <TouchableOpacity
           style={[gs.size50, gs.rounded8, gs.center, {backgroundColor: colors.secondaryBackground}]}
           onPress={() => navigate('AddDebtsScreen', {debtorId, debtorName})}

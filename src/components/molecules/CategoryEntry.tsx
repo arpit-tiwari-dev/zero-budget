@@ -1,6 +1,8 @@
 import {TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useMemo, useState, memo} from 'react';
+import type {RouteProp} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
+import type {HomeStackParamList} from '../../navigation/types';
 import PrimaryView from '../atoms/PrimaryView';
 import AppHeader from '../atoms/AppHeader';
 import CustomInput from '../atoms/CustomInput';
@@ -9,7 +11,6 @@ import Icon from '../atoms/Icons';
 import PrimaryButton from '../atoms/PrimaryButton';
 import useThemeColors from '../../hooks/useThemeColors';
 import {goBack} from '../../utils/navigationUtils';
-import {useDispatch, useSelector} from 'react-redux';
 import {selectUserId} from '../../redux/slice/userIdSlice';
 import {createCategory, updateCategoryById} from '../../watermelondb/services';
 import {fetchCategories, selectCategoryData} from '../../redux/slice/categoryDataSlice';
@@ -17,7 +18,7 @@ import {categorySchema} from '../../utils/validationSchema';
 import defaultCategories from '../../../assets/jsons/defaultCategories.json';
 import {FlashList} from '@shopify/flash-list';
 import {SheetManager} from 'react-native-actions-sheet';
-import {AppDispatch} from '../../redux/store';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import {gs} from '../../styles/globalStyles';
 
 interface CategorySelection {
@@ -28,13 +29,13 @@ interface CategorySelection {
 
 interface CategoryEntryProps {
   type: string;
-  route?: any;
+  route?: RouteProp<HomeStackParamList, 'UpdateCategoryScreen'>;
 }
 
 const CategoryEntry: React.FC<CategoryEntryProps> = ({type, route}) => {
   const {t} = useTranslation();
   const colors = useThemeColors();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const categoryData = route?.params;
   const isAddButton = type === 'Add';
 
@@ -55,7 +56,7 @@ const CategoryEntry: React.FC<CategoryEntryProps> = ({type, route}) => {
 
   const selectedCategoryNames = useMemo(() => new Set(selectedCategories.map(c => c.name)), [selectedCategories]);
 
-  const allCategories = useSelector(selectCategoryData) ?? [];
+  const allCategories = useAppSelector(selectCategoryData) ?? [];
   const existingCategoryNamesSet = useMemo(
     () => new Set((allCategories ?? []).map((category: CategorySelection) => category.name)),
     [allCategories],
@@ -65,7 +66,7 @@ const CategoryEntry: React.FC<CategoryEntryProps> = ({type, route}) => {
     [existingCategoryNamesSet],
   );
 
-  const userId = useSelector(selectUserId);
+  const userId = useAppSelector(selectUserId);
   const isValid = categorySchema.safeParse(categoryName).success;
 
   const handleAddCategory = useCallback(async () => {
@@ -89,8 +90,9 @@ const CategoryEntry: React.FC<CategoryEntryProps> = ({type, route}) => {
   }, [selectedCategories, userId, dispatch]);
 
   const handleUpdateCategory = useCallback(async () => {
+    if (!categoryData?.categoryId) { return; }
     try {
-      await updateCategoryById(categoryData?.categoryId, categoryName, selectedIcon ?? undefined, selectedColor ?? undefined);
+      await updateCategoryById(categoryData.categoryId, categoryName, selectedIcon ?? undefined, selectedColor ?? undefined);
       dispatch(fetchCategories());
       goBack();
     } catch (error) {

@@ -57,6 +57,7 @@ const ExistingUserScreen = () => {
     isSyncComplete,
     syncStatus,
     syncStats,
+    syncError,
   } = useExistingUser();
   const {t} = useTranslation();
 
@@ -143,7 +144,17 @@ const ExistingUserScreen = () => {
           )}
         </View>
 
-      <PrimaryButton onPress={handleContinue} colors={colors} buttonTitle={t('common.continue')} disabled={!isSyncComplete} />
+      <View>
+        {syncError ? (
+          <View style={[gs.rowCenter, gs.mb10]}>
+            <Icon name="x-circle" size={16} color={colors.accentRed} />
+            <PrimaryText size={13} color={colors.accentRed} style={[gs.ml8, gs.flex1]}>
+              {syncError}
+            </PrimaryText>
+          </View>
+        ) : null}
+        <PrimaryButton onPress={handleContinue} colors={colors} buttonTitle={t('common.continue')} disabled={!isSyncComplete} />
+      </View>
     </PrimaryView>
   );
 };

@@ -24,6 +24,53 @@ export interface ExpenseWithCategory extends ExpenseData {
   };
 }
 
+type CategoryInfo = {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+};
+
+const buildCategoryMap = async (userId: string): Promise<Map<string, CategoryInfo>> => {
+  // Intentionally queries ALL categories (no category_status filter) so that
+  // expenses under soft-deleted categories still resolve their name/icon/color.
+  // Do NOT add a status filter here — it would break historical categorization.
+  const categories = await database
+    .get<Category>('categories')
+    .query(Q.where('user_id', userId))
+    .fetch();
+  return new Map(
+    categories.map(cat => [
+      cat.id,
+      {id: cat.id, name: cat.name, icon: cat.icon ?? '', color: cat.color ?? '#808080'},
+    ]),
+  );
+};
+
+const mapExpenseWithCategory = (
+  e: Expense,
+  categoryMap: Map<string, CategoryInfo>,
+): ExpenseWithCategory => ({
+  id: e.id,
+  title: e.title,
+  amount: e.amount,
+  description: e.description ?? '',
+  categoryId: e.categoryId,
+  userId: e.userId,
+  date: e.date,
+  category: categoryMap.get(e.categoryId),
+});
+
+const mapExpenseToData = (e: Expense): ExpenseData => ({
+  id: e.id,
+  title: e.title,
+  amount: e.amount,
+  description: e.description ?? '',
+  categoryId: e.categoryId,
+  userId: e.userId,
+  date: e.date,
+});
+
 /**
  * Creates a new expense
  */
@@ -37,10 +84,12 @@ export const createExpense = async (
 ): Promise<string> => {
   let expenseId = '';
   await database.write(async () => {
+    // Uses WatermelonDB auto-generated ID (library default). This is intentional;
+    // other services use nanoid(24) for historical reasons. Both are valid.
     const expense = await database.get<Expense>('expenses').create(exp => {
       exp.title = title;
       exp.amount = amount;
-      exp.description = description || undefined;
+      exp.description = description || '';
       exp.categoryId = categoryId;
       exp.userId = userId;
       exp.date = date;
@@ -103,15 +152,7 @@ export const getAllExpensesByUserId = async (
     .get<Expense>('expenses')
     .query(Q.where('user_id', userId))
     .fetch();
-  return expenses.map(e => ({
-    id: e.id,
-    title: e.title,
-    amount: e.amount,
-    description: e.description ?? '',
-    categoryId: e.categoryId,
-    userId: e.userId,
-    date: e.date,
-  }));
+  return expenses.map(mapExpenseToData);
 };
 
 /**
@@ -120,40 +161,13 @@ export const getAllExpensesByUserId = async (
 export const getAllExpensesByUserIdWithCategory = async (
   userId: string,
 ): Promise<ExpenseWithCategory[]> => {
-  // Get all expenses for the user
   const expenses = await database
     .get<Expense>('expenses')
     .query(Q.where('user_id', userId))
     .fetch();
 
-  // Get all categories for the user
-  const categories = await database
-    .get<Category>('categories')
-    .query(Q.where('user_id', userId))
-    .fetch();
-
-  // Create a map of categoryId -> category for fast lookup
-  const categoryMap = new Map(
-    categories.map(cat => [
-      cat.id,
-      {id: cat.id, name: cat.name, icon: cat.icon ?? '', color: cat.color ?? '#808080'},
-    ]),
-  );
-
-  // Join expenses with their categories
-  return expenses.map(e => {
-    const category = categoryMap.get(e.categoryId);
-    return {
-      id: e.id,
-      title: e.title,
-      amount: e.amount,
-      description: e.description ?? '',
-      categoryId: e.categoryId,
-      userId: e.userId,
-      date: e.date,
-      category,
-    };
-  });
+  const categoryMap = await buildCategoryMap(userId);
+  return expenses.map(e => mapExpenseWithCategory(e, categoryMap));
 };
 
 /**
@@ -163,8 +177,6 @@ export const getAllExpensesByDate = async (
   userId: string,
   targetDate: string,
 ): Promise<ExpenseWithCategory[]> => {
-  // Filter by date at database level using indexed column
-  // Use Q.like to match dates that start with the target date (YYYY-MM-DD format)
   const expenses = await database
     .get<Expense>('expenses')
     .query(
@@ -173,34 +185,8 @@ export const getAllExpensesByDate = async (
     )
     .fetch();
 
-  // Get all categories for the user
-  const categories = await database
-    .get<Category>('categories')
-    .query(Q.where('user_id', userId))
-    .fetch();
-
-  // Create a map of categoryId -> category for fast lookup
-  const categoryMap = new Map(
-    categories.map(cat => [
-      cat.id,
-      {id: cat.id, name: cat.name, icon: cat.icon ?? '', color: cat.color ?? '#808080'},
-    ]),
-  );
-
-  // Return expenses with category data
-  return expenses.map(e => {
-    const category = categoryMap.get(e.categoryId);
-    return {
-      id: e.id,
-      title: e.title,
-      amount: e.amount,
-      description: e.description ?? '',
-      categoryId: e.categoryId,
-      userId: e.userId,
-      date: e.date,
-      category,
-    };
-  });
+  const categoryMap = await buildCategoryMap(userId);
+  return expenses.map(e => mapExpenseWithCategory(e, categoryMap));
 };
 
 /**
@@ -218,31 +204,8 @@ export const getAllExpensesByMonth = async (
     )
     .fetch();
 
-  const categories = await database
-    .get<Category>('categories')
-    .query(Q.where('user_id', userId))
-    .fetch();
-
-  const categoryMap = new Map(
-    categories.map(cat => [
-      cat.id,
-      {id: cat.id, name: cat.name, icon: cat.icon ?? '', color: cat.color ?? '#808080'},
-    ]),
-  );
-
-  return expenses.map(e => {
-    const category = categoryMap.get(e.categoryId);
-    return {
-      id: e.id,
-      title: e.title,
-      amount: e.amount,
-      description: e.description ?? '',
-      categoryId: e.categoryId,
-      userId: e.userId,
-      date: e.date,
-      category,
-    };
-  });
+  const categoryMap = await buildCategoryMap(userId);
+  return expenses.map(e => mapExpenseWithCategory(e, categoryMap));
 };
 
 /**
@@ -262,42 +225,30 @@ export const getAllExpensesByCategoryAndMonth = async (
     )
     .fetch();
 
-  const category = await database.get<Category>('categories').find(categoryId);
-  const categoryData = {
-    id: category.id,
-    name: category.name,
-    icon: category.icon ?? '',
-    color: category.color ?? '#808080',
-  };
-
-  return expenses.map(e => ({
-    id: e.id,
-    title: e.title,
-    amount: e.amount,
-    description: e.description ?? '',
-    categoryId: e.categoryId,
-    userId: e.userId,
-    date: e.date,
-    category: categoryData,
-  }));
+  const categoryMap = await buildCategoryMap(userId);
+  return expenses.map(e => mapExpenseWithCategory(e, categoryMap));
 };
 
 /**
- * Gets distinct years that have expense data for a user
+ * Gets distinct years that have expense data for a user.
+ * Uses unsafeFetchRaw to avoid hydrating full model objects.
  */
 export const getAvailableExpenseYears = async (
   userId: string,
 ): Promise<number[]> => {
-  const expenses = await database
+  const raws = await database
     .get<Expense>('expenses')
     .query(Q.where('user_id', userId))
-    .fetch();
+    .unsafeFetchRaw();
 
   const years = new Set<number>();
-  for (const e of expenses) {
-    const year = Number.parseInt(e.date.substring(0, 4), 10);
-    if (!Number.isNaN(year)) {
-      years.add(year);
+  for (const r of raws) {
+    const dateStr = (r as {date?: string}).date;
+    if (dateStr) {
+      const year = Number.parseInt(dateStr.substring(0, 4), 10);
+      if (!Number.isNaN(year)) {
+        years.add(year);
+      }
     }
   }
 
@@ -312,15 +263,7 @@ export const getExpenseById = async (
 ): Promise<ExpenseData | null> => {
   try {
     const expense = await database.get<Expense>('expenses').find(expenseId);
-    return {
-      id: expense.id,
-      title: expense.title,
-      amount: expense.amount,
-      description: expense.description ?? '',
-      categoryId: expense.categoryId,
-      userId: expense.userId,
-      date: expense.date,
-    };
+    return mapExpenseToData(expense);
   } catch {
     return null;
   }

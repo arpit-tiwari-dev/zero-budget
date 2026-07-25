@@ -1,6 +1,7 @@
 import {TouchableOpacity, View, useWindowDimensions} from 'react-native';
 import React, {useCallback, useMemo} from 'react';
-import {SheetManager, SheetProps} from 'react-native-actions-sheet';
+import {useTranslation} from 'react-i18next';
+import {SheetManager, SheetProps, ScrollView as SheetScrollView} from 'react-native-actions-sheet';
 import {FlashList} from '@shopify/flash-list';
 import {CustomBottomSheet} from '../components/atoms/CustomBottomSheet';
 import useThemeColors from '../hooks/useThemeColors';
@@ -8,6 +9,7 @@ import allColors from '../../assets/jsons/categoryColors.json';
 import {gs} from '../styles/globalStyles';
 
 const ColorPickerSheet: React.FC<SheetProps<'color-picker-sheet'>> = React.memo(props => {
+  const {t} = useTranslation();
   const colors = useThemeColors();
   const selectedColor = props.payload?.selectedColor ?? 'null';
 
@@ -48,7 +50,7 @@ const ColorPickerSheet: React.FC<SheetProps<'color-picker-sheet'>> = React.memo(
     <CustomBottomSheet
       sheetId={props.sheetId}
       header={{
-        title: 'Select Color',
+        title: t('sheets.selectColor'),
         showCloseButton: true,
         onClosePress: () => {
           SheetManager.hide(props.sheetId);
@@ -57,6 +59,7 @@ const ColorPickerSheet: React.FC<SheetProps<'color-picker-sheet'>> = React.memo(
       gestureEnabled>
       <View style={[gs.h350, gs.px10]}>
         <FlashList
+          renderScrollComponent={SheetScrollView}
           data={colorsList}
           renderItem={renderColorItem}
           numColumns={6}

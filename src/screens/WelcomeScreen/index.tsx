@@ -9,7 +9,7 @@ import useWelcome from './useWelcome';
 import {gs} from '../../styles/globalStyles';
 
 const WelcomeScreen = () => {
-  const {colors, handleAllreadyUser, handleNewUser} = useWelcome();
+  const {colors, handleAlreadyUser, handleNewUser} = useWelcome();
   const {t} = useTranslation();
 
   return (
@@ -30,7 +30,7 @@ const WelcomeScreen = () => {
 
       <View style={gs.gap12}>
         <PrimaryButton onPress={handleNewUser} colors={colors} buttonTitle={t('common.getStarted')} />
-        <PrimaryButton onPress={handleAllreadyUser} colors={colors} buttonTitle={t('backup.iHaveBackup')} variant="outline" />
+        <PrimaryButton onPress={handleAlreadyUser} colors={colors} buttonTitle={t('backup.iHaveBackup')} variant="outline" />
       </View>
     </PrimaryView>
   );

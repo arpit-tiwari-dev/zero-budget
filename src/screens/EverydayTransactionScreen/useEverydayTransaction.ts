@@ -1,13 +1,11 @@
 import {formatDate} from '../../utils/dateUtils';
 import useThemeColors from '../../hooks/useThemeColors';
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import {selectCurrencySymbol} from '../../redux/slice/currencyDataSlice';
 import {RouteProp, useFocusEffect} from '@react-navigation/native';
 import {ExpenseData as Expense} from '../../watermelondb/services';
 import {useCallback, useMemo} from 'react';
-import {fetchEverydayExpenses, selectEverydayExpenseData} from '../../redux/slice/everydayExpenseDataSlice';
-import {AppDispatch} from '../../redux/store';
-
+import {fetchEverydayExpenses, selectFilteredExpenses} from '../../redux/slice/expenseDataSlice';
 export type EverydayTransactionRouteProp = RouteProp<
   {
     EverydayTransaction: {
@@ -19,13 +17,13 @@ export type EverydayTransactionRouteProp = RouteProp<
 >;
 
 const useEverydayTransaction = (route: EverydayTransactionRouteProp) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const allEverydayTransactions = (useSelector(selectEverydayExpenseData) ?? []) as Expense[];
+  const dispatch = useAppDispatch();
+  const allEverydayTransactions = (useAppSelector(selectFilteredExpenses) ?? []) as Expense[];
   const expenseDate = route.params?.isDate ?? '';
   const formattedDate = formatDate(expenseDate, 'MMM Do YY');
   const formattedDateDisplay = formatDate(expenseDate, 'MMM Do YY');
   const colors = useThemeColors();
-  const currencySymbol = useSelector(selectCurrencySymbol);
+  const currencySymbol = useAppSelector(selectCurrencySymbol);
 
   useFocusEffect(
     useCallback(() => {

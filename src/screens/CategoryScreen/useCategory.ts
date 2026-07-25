@@ -1,16 +1,14 @@
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import useThemeColors from '../../hooks/useThemeColors';
 import {fetchCategories, selectActiveCategories} from '../../redux/slice/categoryDataSlice';
 import {useCallback, useEffect, useState} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
 import {navigate} from '../../utils/navigationUtils';
 import {softDeleteCategoryById} from '../../watermelondb/services';
-import {AppDispatch} from '../../redux/store';
-
 const useCategory = () => {
   const colors = useThemeColors();
-  const dispatch = useDispatch<AppDispatch>();
-  const categories = useSelector(selectActiveCategories);
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector(selectActiveCategories);
   const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(

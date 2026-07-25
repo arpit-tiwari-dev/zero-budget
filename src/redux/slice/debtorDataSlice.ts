@@ -10,9 +10,9 @@ const initialState = debtorsAdapter.getInitialState({
   error: null as string | null,
 });
 
-export const fetchDebtors = createAsyncThunk('debtor/fetchAll', async (_, {getState, rejectWithValue}) => {
+export const fetchDebtors = createAsyncThunk<Debtor[], void, {state: RootState}>('debtor/fetchAll', async (_, {getState, rejectWithValue}) => {
   try {
-    const userId = selectUserId(getState() as RootState);
+    const userId = selectUserId(getState());
     const debtors = await getAllDebtorsByUserId(userId);
     return debtors;
   } catch (error) {
@@ -23,11 +23,7 @@ export const fetchDebtors = createAsyncThunk('debtor/fetchAll', async (_, {getSt
 const debtorDataSlice = createSlice({
   name: 'debtor',
   initialState,
-  reducers: {
-    debtorAdded: debtorsAdapter.addOne,
-    debtorUpdated: debtorsAdapter.updateOne,
-    debtorRemoved: debtorsAdapter.removeOne,
-  },
+  reducers: {},
   extraReducers: builder => {
     builder
       .addCase(fetchDebtors.pending, state => {
@@ -59,7 +55,5 @@ export const selectDebtorError = (state: RootState) => state.debtor.error;
 export const selectActiveDebtors = createSelector([selectDebtorData], debtorData =>
   debtorData.filter((debtor: Debtor) => debtor.debtorStatus === true),
 );
-
-export const {debtorAdded, debtorUpdated, debtorRemoved} = debtorDataSlice.actions;
 
 export default debtorDataSlice.reducer;

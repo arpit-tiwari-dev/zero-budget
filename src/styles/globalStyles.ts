@@ -115,6 +115,7 @@ export const gs = StyleSheet.create({
   pb10: {paddingBottom: 10},
   pb20: {paddingBottom: 20},
   pb80: {paddingBottom: 80},
+  pb100: {paddingBottom: 100},
 
   pl10: {paddingStart: 10},
   pl15: {paddingStart: 15},

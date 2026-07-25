@@ -1,5 +1,7 @@
 import {runMigrations} from './migrations/runner';
 
+export {hasMigrationFailed} from './migrations/runner';
+
 /**
  * Initialize the backend layer.
  * Called once on app startup before any screens render.

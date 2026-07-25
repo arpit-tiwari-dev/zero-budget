@@ -4,6 +4,38 @@ import i18n from 'i18next';
 import PrimaryText from './PrimaryText';
 import {appendErrorLog} from '../../utils/errorLog';
 
+interface ErrorBoundaryColors {
+  background: string;
+  text: string;
+  secondaryText: string;
+  buttonBackground: string;
+  buttonText: string;
+}
+
+/**
+ * Resolves theme colors for the error fallback UI. Uses Appearance API
+ * directly because ErrorBoundary sits outside ThemeProvider and cannot
+ * consume context.
+ */
+function getErrorBoundaryColors(): ErrorBoundaryColors {
+  const isDark = Appearance.getColorScheme() === 'dark';
+  return isDark
+    ? {
+        background: '#0F0F0F',
+        text: '#FFFFFF',
+        secondaryText: '#CCCCCC',
+        buttonBackground: '#B1FB98',
+        buttonText: '#000000',
+      }
+    : {
+        background: '#FAFAF8',
+        text: '#1A1A1A',
+        secondaryText: '#505050',
+        buttonBackground: '#6E8B3D',
+        buttonText: '#FFFFFF',
+      };
+}
+
 interface Props {
   children: ReactNode;
 }
@@ -35,18 +67,21 @@ class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      const isDark = Appearance.getColorScheme() === 'dark';
+      const c = getErrorBoundaryColors();
       return (
-        <View style={[styles.container, {backgroundColor: isDark ? '#000' : '#fff'}]}>
-          <PrimaryText size={40} weight="bold" color={isDark ? '#fff' : '#000'}>:(</PrimaryText>
-          <PrimaryText size={16} weight="semibold" color={isDark ? '#fff' : '#000'} style={styles.title}>
+        <View style={[styles.container, {backgroundColor: c.background}]}>
+          <PrimaryText size={40} weight="bold" color={c.text}>:(</PrimaryText>
+          <PrimaryText size={16} weight="semibold" color={c.text} style={styles.title}>
             {i18n.t('errorBoundary.title')}
           </PrimaryText>
-          <PrimaryText size={13} color="#888" style={styles.subtitle}>
+          <PrimaryText size={13} color={c.secondaryText} style={styles.subtitle}>
             {i18n.t('errorBoundary.message')}
           </PrimaryText>
-          <TouchableOpacity onPress={this.handleRetry} style={styles.button} activeOpacity={0.7}>
-            <PrimaryText size={14} weight="semibold" color="#fff">
+          <TouchableOpacity
+            onPress={this.handleRetry}
+            style={[styles.button, {backgroundColor: c.buttonBackground}]}
+            activeOpacity={0.7}>
+            <PrimaryText size={14} weight="semibold" color={c.buttonText}>
               {i18n.t('errorBoundary.retry')}
             </PrimaryText>
           </TouchableOpacity>
@@ -79,7 +114,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 10,
-    backgroundColor: '#22c55e',
   },
 });
 

@@ -1,24 +1,11 @@
 import React from 'react';
-import {RouteProp, useRoute} from '@react-navigation/native';
+import {useRoute} from '@react-navigation/native';
+import type {RouteProp} from '@react-navigation/native';
 import ExpenseEntry from '../../components/molecules/ExpenseEntry';
-import {CategoryData as Category} from '../../watermelondb/services';
-
-export type UpdateTransactionScreenRouteProp = RouteProp<
-  {
-    UpdateTransactionScreen: {
-      expenseId: string;
-      expenseTitle: string;
-      expenseDescription: string;
-      category: Category;
-      expenseDate: string;
-      expenseAmount: string;
-    };
-  },
-  'UpdateTransactionScreen'
->;
+import type {HomeStackParamList} from '../../navigation/types';
 
 const UpdateTransactionScreen = () => {
-  const route = useRoute<UpdateTransactionScreenRouteProp>();
+  const route = useRoute<RouteProp<HomeStackParamList, 'UpdateTransactionScreen'>>();
 
   return <ExpenseEntry type={'Update'} route={route} />;
 };

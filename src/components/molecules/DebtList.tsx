@@ -1,13 +1,11 @@
 import {RefreshControlProps, View} from 'react-native';
-import {TouchableOpacity} from 'react-native-gesture-handler';
 import React, {useCallback, useMemo, useRef, memo} from 'react';
 import {useTranslation} from 'react-i18next';
-import Animated, {SharedValue, useAnimatedStyle, interpolate} from 'react-native-reanimated';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import type {SwipeableMethods} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import {DebtData as Debt} from '../../watermelondb/services';
 import PrimaryText from '../atoms/PrimaryText';
 import Icon from '../atoms/Icons';
+import SwipeableRow from '../atoms/SwipeableRow';
 import {formatDate, formatCalendar} from '../../utils/dateUtils';
 import {Colors} from '../../hooks/useThemeColors';
 import useFormatAmount from '../../hooks/useFormatAmount';
@@ -30,49 +28,6 @@ interface GroupedDebt {
   label: string;
 }
 
-const ACTION_WIDTH = 50;
-const EDGE_INSET = 16;
-
-const SwipeAction = ({
-  progress,
-  iconName,
-  iconColor,
-  backgroundColor,
-  side,
-  onPress,
-}: {
-  progress: SharedValue<number>;
-  iconName: string;
-  iconColor: string;
-  backgroundColor: string;
-  side: 'left' | 'right';
-  onPress: () => void;
-}) => {
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.6, 1], [0, 0.8, 1]),
-    transform: [{scale: interpolate(progress.value, [0, 1], [0.6, 1])}],
-  }));
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.7}
-      style={[
-        gs.center,
-        {
-          flex: 1,
-          width: ACTION_WIDTH + EDGE_INSET,
-          paddingLeft: side === 'left' ? EDGE_INSET : 0,
-          paddingRight: side === 'right' ? EDGE_INSET : 0,
-        },
-      ]}>
-      <Animated.View style={[gs.size40, gs.roundedFull, gs.center, animatedStyle, {backgroundColor}]}>
-        <Icon name={iconName} size={18} color={iconColor} />
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
-
 const DebtRow = memo(({
   debt,
   colors,
@@ -88,53 +43,25 @@ const DebtRow = memo(({
   openSwipeableRef: React.RefObject<{close: () => void} | null>;
   tutorialSwipeRef?: React.RefObject<SwipeableMethods | null>;
 }) => {
-  const swipeableRef = useRef<SwipeableMethods | null>(null);
   const formatAmount = useFormatAmount();
 
-  const combinedRef = tutorialSwipeRef ?? swipeableRef;
+  const handleEdit = useCallback(() => {
+    onEdit(debt);
+  }, [onEdit, debt]);
 
-  const handleSwipeWillOpen = useCallback(() => {
-    if (openSwipeableRef.current && openSwipeableRef.current !== combinedRef.current) {
-      openSwipeableRef.current.close();
-    }
-    openSwipeableRef.current = combinedRef.current;
-  }, [openSwipeableRef, combinedRef]);
+  const handleDelete = useCallback(() => {
+    onDelete(String(debt.id));
+  }, [onDelete, debt.id]);
 
   return (
     <View style={gs.mb5}>
-      <ReanimatedSwipeable
-        ref={combinedRef}
-        renderLeftActions={(progress, _translation, swipeableMethods) => (
-          <SwipeAction
-            progress={progress}
-            iconName="pencil"
-            iconColor={colors.accentGreen}
-            backgroundColor={colors.lightAccent}
-            side="left"
-            onPress={() => {
-              onEdit(debt);
-              swipeableMethods.close();
-            }}
-          />
-        )}
-        renderRightActions={(progress, _translation, swipeableMethods) => (
-          <SwipeAction
-            progress={progress}
-            iconName="trash-2"
-            iconColor={colors.accentOrange}
-            backgroundColor={colors.lightAccent}
-            side="right"
-            onPress={() => {
-              onDelete(String(debt.id));
-              swipeableMethods.close();
-            }}
-          />
-        )}
-        onSwipeableWillOpen={handleSwipeWillOpen}
-        friction={2}
-        overshootLeft={false}
-        overshootRight={false}
-        overshootFriction={8}>
+      <SwipeableRow
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        colors={colors}
+        swipeRef={tutorialSwipeRef}
+        openSwipeableRef={openSwipeableRef}
+        edgeToEdge>
         <View
           style={[
             gs.rounded12,
@@ -158,7 +85,7 @@ const DebtRow = memo(({
             </PrimaryText>
           </View>
         </View>
-      </ReanimatedSwipeable>
+      </SwipeableRow>
     </View>
   );
 });
@@ -272,7 +199,7 @@ const DebtList: React.FC<DebtListProps> = ({
         ListHeaderComponent={ListHeaderComponent}
         ListEmptyComponent={ListEmpty}
         refreshControl={refreshControl}
-        contentContainerStyle={gs.pb80}
+        contentContainerStyle={gs.pb100}
       />
     </View>
   );

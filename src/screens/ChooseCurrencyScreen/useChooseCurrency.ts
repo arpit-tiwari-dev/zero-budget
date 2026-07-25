@@ -1,6 +1,6 @@
 import {useState, useCallback} from 'react';
 import useThemeColors from '../../hooks/useThemeColors';
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import {selectUserId} from '../../redux/slice/userIdSlice';
 import {createCurrency} from '../../watermelondb/services';
 import StorageService from '../../utils/asyncStorageService';
@@ -18,8 +18,8 @@ const useChooseCurrency = () => {
   const [search, setSearch] = useState('');
   const [filteredCurrencies, setFilteredCurrencies] = useState(currencies);
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencySelection | null>(null);
-  const userId = useSelector(selectUserId);
-  const dispatch = useDispatch();
+  const userId = useAppSelector(selectUserId);
+  const dispatch = useAppDispatch();
 
   const handleCurrencySubmit = useCallback(async () => {
     if (selectedCurrency) {

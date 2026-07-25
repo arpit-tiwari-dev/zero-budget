@@ -68,10 +68,10 @@ export const updateCategoryById = async (
         cat.name = newName;
       }
       if (newIcon !== undefined) {
-        cat.icon = newIcon;
+        cat.icon = sanitizeString(newIcon, DEFAULTS.icon);
       }
       if (newColor !== undefined) {
-        cat.color = newColor;
+        cat.color = sanitizeString(newColor, DEFAULTS.color);
       }
     });
   });

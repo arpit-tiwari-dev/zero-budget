@@ -15,7 +15,7 @@ import {gs} from '../../styles/globalStyles';
 
 const EverydayTransactionScreen = () => {
   const route = useRoute<EverydayTransactionRouteProp>();
-  const {formatDate, formattedDate, colors, expenseDate, allEverydayTransactions, totalAmountForTheDay} =
+  const {formattedDate, colors, expenseDate, allEverydayTransactions, totalAmountForTheDay} =
     useEverydayTransaction(route);
   const {t} = useTranslation();
   const formatAmount = useFormatAmount();
@@ -56,7 +56,7 @@ const EverydayTransactionScreen = () => {
   return (
     <PrimaryView colors={colors}>
       <View style={[gs.mb20, gs.mt20]}>
-        <AppHeader onPress={goBack} colors={colors} text={formattedDate === undefined ? formattedDate : formatDate} />
+        <AppHeader onPress={goBack} colors={colors} text={formattedDate} />
       </View>
       <TransactionList
         allExpenses={allEverydayTransactions}

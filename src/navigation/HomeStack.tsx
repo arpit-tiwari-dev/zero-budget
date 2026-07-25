@@ -3,6 +3,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Platform, Pressable, Text, View} from 'react-native';
+import type {HomeStackParamList, TabParamList} from './types';
 import {useTranslation} from 'react-i18next';
 import Icon from '../components/atoms/Icons';
 import useThemeColors from '../hooks/useThemeColors';
@@ -78,8 +79,8 @@ const CategoriesIcon = ({color}: {color: string}) => {
   );
 };
 
-const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator<HomeStackParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
 
 const TabBarButton = (props: any) => (
   <Pressable {...props} android_ripple={{color: 'transparent'}} />
@@ -131,7 +132,6 @@ const HomeStack = () => {
       <Stack.Screen name="TabStack" component={TabStack} />
       <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
       <Stack.Screen name="AddTransactionsScreen" component={AddTransactionsScreen} />
-      <Stack.Screen name="CategoryScreen" component={CategoryScreen} />
       <Stack.Screen name="UpdateTransactionScreen" component={UpdateTransactionScreen} />
       <Stack.Screen name="AddCategoryScreen" component={AddCategoryScreen} />
       <Stack.Screen name="UpdateCategoryScreen" component={UpdateCategoryScreen} />

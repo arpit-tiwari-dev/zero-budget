@@ -14,7 +14,9 @@ import EmptyState from '../../components/atoms/EmptyState';
 import useFormatAmount from '../../hooks/useFormatAmount';
 import {SheetManager} from 'react-native-actions-sheet';
 import Icon from '../../components/atoms/Icons';
+import DailyBudgetRow from '../../components/atoms/DailyBudgetRow';
 import {gs} from '../../styles/globalStyles';
+import {hexToRgba} from '../../utils/colorUtils';
 
 const ReportsScreen = () => {
   const {
@@ -27,9 +29,33 @@ const ReportsScreen = () => {
     handleMonthYearSelect,
     totalAmountForMonth,
     daysInMonth,
+    todayTotal,
+    isCurrentMonth,
+    currentBudget,
+    currencySymbol,
+    handleBudgetSave,
+    handleBudgetRemove,
   } = useReports();
   const {t} = useTranslation();
   const formatAmount = useFormatAmount();
+
+  const budgetMonthLabel = `${selectedMonth} ${selectedYear}`;
+  const dailyBudget = currentBudget && daysInMonth > 0 ? currentBudget.amount / daysInMonth : 0;
+  const dailyLeft = dailyBudget - todayTotal;
+  const budgetExceeded = currentBudget ? totalAmountForMonth > currentBudget.amount : false;
+
+  const openBudgetSheet = useCallback(() => {
+    void SheetManager.show('budget-sheet', {
+      payload: {
+        currentAmount: currentBudget?.amount,
+        currencySymbol,
+        isRecurring: currentBudget?.month.startsWith('recurring') ?? false,
+        monthLabel: budgetMonthLabel,
+        onSave: handleBudgetSave,
+        onRemove: handleBudgetRemove,
+      },
+    });
+  }, [currentBudget, currencySymbol, budgetMonthLabel, handleBudgetSave, handleBudgetRemove]);
 
   const openMonthPicker = useCallback(() => {
     const monthIndex = getMonthIndex(selectedMonth);
@@ -124,14 +150,6 @@ const ReportsScreen = () => {
 
     return {transactionsByDay: byDay, maxDayAmount: maxAmount};
   }, [filteredTransactions]);
-
-  const hexToRgba = (hex: string, alpha: number): string => {
-    const cleanHex = hex.replace('#', '');
-    const r = Number.parseInt(cleanHex.substring(0, 2), 16);
-    const g = Number.parseInt(cleanHex.substring(2, 4), 16);
-    const b = Number.parseInt(cleanHex.substring(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
 
   const getHeatmapColor = useCallback(
     (amount: number, hasTransactions: boolean): string => {
@@ -246,6 +264,45 @@ const ReportsScreen = () => {
           </PrimaryText>
         </View>
       </View>
+
+      {currentBudget ? (
+        <TouchableOpacity
+          onPress={openBudgetSheet}
+          activeOpacity={0.7}
+          style={[gs.px12, gs.py10, gs.rounded8, gs.mt6, {backgroundColor: colors.secondaryAccent}]}>
+          <View style={gs.rowBetweenCenter}>
+            <PrimaryText size={13} weight="semibold" variant="number" color={budgetExceeded ? colors.accentOrange : colors.primaryText} numberOfLines={1}>
+              {formatAmount(Math.max(currentBudget.amount - totalAmountForMonth, 0))} {t('home.remaining')}
+            </PrimaryText>
+            <PrimaryText size={11} variant="number" color={colors.secondaryText} numberOfLines={1}>
+              {formatAmount(totalAmountForMonth)} / {formatAmount(currentBudget.amount)}
+            </PrimaryText>
+          </View>
+          <View style={[gs.rounded4, gs.h4, gs.mt8, {backgroundColor: colors.secondaryContainerColor}]}>
+            <View
+              style={[
+                gs.rounded4,
+                gs.h4,
+                {
+                  width: `${Math.min((totalAmountForMonth / currentBudget.amount) * 100, 100)}%`,
+                  backgroundColor: budgetExceeded ? colors.accentOrange : colors.accentGreen,
+                },
+              ]}
+            />
+          </View>
+          <View style={gs.mt6}>
+            <DailyBudgetRow dailyBudget={dailyBudget} dailyLeft={dailyLeft} isCurrentMonth={isCurrentMonth} colors={colors} formatAmount={formatAmount} t={t} />
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          onPress={openBudgetSheet}
+          activeOpacity={0.7}
+          style={[gs.rowCenter, gs.gap6, gs.px12, gs.py10, gs.rounded8, gs.mt6, {backgroundColor: colors.secondaryAccent}]}>
+          <Icon name="target" size={14} color={colors.secondaryText} />
+          <PrimaryText size={12} color={colors.secondaryText}>{t('reports.setBudget')}</PrimaryText>
+        </TouchableOpacity>
+      )}
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {filteredTransactions.length === 0 ? (

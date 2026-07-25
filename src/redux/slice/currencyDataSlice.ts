@@ -1,4 +1,4 @@
-import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
+import {createAsyncThunk, createSlice, type PayloadAction} from '@reduxjs/toolkit';
 import {RootState} from '../rootReducer';
 import {getCurrencyByUserId} from '../../watermelondb/services';
 import {selectUserId} from './userIdSlice';
@@ -21,9 +21,9 @@ const initialState: CurrencyState = {
   error: null,
 };
 
-export const fetchCurrency = createAsyncThunk('currency/fetch', async (_, {getState, rejectWithValue}) => {
+export const fetchCurrency = createAsyncThunk<{currencyId: string; currencyName: string; currencySymbol: string; currencyCode: string} | null, void, {state: RootState}>('currency/fetch', async (_, {getState, rejectWithValue}) => {
   try {
-    const userId = selectUserId(getState() as RootState);
+    const userId = selectUserId(getState());
     const currency = await getCurrencyByUserId(userId);
     if (currency) {
       return {
@@ -43,7 +43,7 @@ const currencyDataSlice = createSlice({
   name: 'currencyData',
   initialState,
   reducers: {
-    setCurrencyData: (state, action) => {
+    setCurrencyData: (state, action: PayloadAction<Omit<CurrencyState, 'isLoading' | 'error'>>) => {
       state.currencyId = action.payload.currencyId;
       state.currencyName = action.payload.currencyName;
       state.currencyCode = action.payload.currencyCode;

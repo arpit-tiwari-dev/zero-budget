@@ -1,11 +1,10 @@
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import useThemeColors from '../../hooks/useThemeColors';
 import {fetchDebtors, selectDebtorData} from '../../redux/slice/debtorDataSlice';
-import {fetchAllDebts, selectAllDebtData} from '../../redux/slice/allDebtDataSlice';
+import {fetchAllDebts, selectAllDebts} from '../../redux/slice/debtDataSlice';
 import {useCallback, useMemo, useState} from 'react';
 import {selectCurrencySymbol} from '../../redux/slice/currencyDataSlice';
 import {DebtorData as Debtor, DebtData as Debt} from '../../watermelondb/services';
-import {AppDispatch} from '../../redux/store';
 import {useFocusEffect} from '@react-navigation/native';
 
 interface DebtWithDebtor extends Debt {
@@ -14,11 +13,11 @@ interface DebtWithDebtor extends Debt {
 
 const useDebts = () => {
   const colors = useThemeColors();
-  const dispatch = useDispatch<AppDispatch>();
-  const debtors = useSelector(selectDebtorData) as Debtor[];
-  const allDebts = useSelector(selectAllDebtData) as DebtWithDebtor[];
+  const dispatch = useAppDispatch();
+  const debtors = useAppSelector(selectDebtorData) as Debtor[];
+  const allDebts = useAppSelector(selectAllDebts) as DebtWithDebtor[];
   const [debtorType, setDebtorType] = useState('Person');
-  const currencySymbol = useSelector(selectCurrencySymbol);
+  const currencySymbol = useAppSelector(selectCurrencySymbol);
 
   const {personDebtors, otherAccountsDebtors} = useMemo(
     () => ({
@@ -28,34 +27,19 @@ const useDebts = () => {
     [debtors],
   );
 
-  const {totalDebts, personTotalDebts, otherTotalDebts} = useMemo(() => {
-    let personBorrowings = 0;
-    let personLendings = 0;
-    let otherBorrowings = 0;
-    let otherLendings = 0;
+  const totalDebts = useMemo(() => {
+    let borrowings = 0;
+    let lendings = 0;
 
     allDebts.forEach((debt: DebtWithDebtor) => {
-      const isPerson = debt?.debtor?.type === 'Person';
       if (debt.type === 'Borrow') {
-        if (isPerson) {
-          personBorrowings += debt.amount;
-        } else {
-          otherBorrowings += debt.amount;
-        }
+        borrowings += debt.amount;
       } else {
-        if (isPerson) {
-          personLendings += debt.amount;
-        } else {
-          otherLendings += debt.amount;
-        }
+        lendings += debt.amount;
       }
     });
 
-    return {
-      totalDebts: personBorrowings + otherBorrowings - (personLendings + otherLendings),
-      personTotalDebts: personBorrowings - personLendings,
-      otherTotalDebts: otherBorrowings - otherLendings,
-    };
+    return borrowings - lendings;
   }, [allDebts]);
 
   useFocusEffect(
@@ -74,8 +58,6 @@ const useDebts = () => {
     personDebtors,
     otherAccountsDebtors,
     totalDebts,
-    personTotalDebts,
-    otherTotalDebts,
     debtors,
   };
 };

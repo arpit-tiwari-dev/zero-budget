@@ -10,9 +10,9 @@ const initialState = categoriesAdapter.getInitialState({
   error: null as string | null,
 });
 
-export const fetchCategories = createAsyncThunk('category/fetchAll', async (_, {getState, rejectWithValue}) => {
+export const fetchCategories = createAsyncThunk<Category[], void, {state: RootState}>('category/fetchAll', async (_, {getState, rejectWithValue}) => {
   try {
-    const userId = selectUserId(getState() as RootState);
+    const userId = selectUserId(getState());
     const categories = await getAllCategoriesByUserId(userId);
     return categories;
   } catch (error) {
@@ -23,11 +23,7 @@ export const fetchCategories = createAsyncThunk('category/fetchAll', async (_, {
 const categoryDataSlice = createSlice({
   name: 'category',
   initialState,
-  reducers: {
-    categoryAdded: categoriesAdapter.addOne,
-    categoryUpdated: categoriesAdapter.updateOne,
-    categoryRemoved: categoriesAdapter.removeOne,
-  },
+  reducers: {},
   extraReducers: builder => {
     builder
       .addCase(fetchCategories.pending, state => {
@@ -59,7 +55,5 @@ export const selectCategoryError = (state: RootState) => state.category.error;
 export const selectActiveCategories = createSelector([selectCategoryData], categoryData =>
   categoryData.filter((category: Category) => category.categoryStatus === true),
 );
-
-export const {categoryAdded, categoryUpdated, categoryRemoved} = categoryDataSlice.actions;
 
 export default categoryDataSlice.reducer;

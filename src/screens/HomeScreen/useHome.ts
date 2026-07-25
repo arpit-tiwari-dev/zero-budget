@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import useThemeColors from '../../hooks/useThemeColors';
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import {
   fetchExpensesByMonth,
   invalidateExpenseCache,
@@ -11,9 +11,9 @@ import {selectUserName} from '../../redux/slice/userNameSlice';
 import {fetchUserData, selectUserId} from '../../redux/slice/userIdSlice';
 import {fetchCurrency, selectCurrencySymbol} from '../../redux/slice/currencyDataSlice';
 import {fetchCategories} from '../../redux/slice/categoryDataSlice';
-import {getCurrentYear, getMonthNumber, getMonthNames, sortByDateDesc} from '../../utils/dateUtils';
+import {fetchBudgetsByMonth, selectCurrentBudget} from '../../redux/slice/budgetDataSlice';
+import {getCurrentYear, getMonthNumber, getMonthNames, getDaysInMonth, sortByDateDesc, formatDate} from '../../utils/dateUtils';
 import {ExpenseData as Expense} from '../../watermelondb/services';
-import {AppDispatch} from '../../redux/store';
 import {loadAvailableYears} from '../../utils/availableYearsCache';
 import {useFocusEffect} from '@react-navigation/native';
 
@@ -26,17 +26,17 @@ const useHome = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [availableYears, setAvailableYears] = useState<number[]>([CURRENT_YEAR]);
 
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
-  const selectedMonthIndex = useSelector(selectMonthIndex);
-  const selectedYear = useSelector(selectYear);
+  const selectedMonthIndex = useAppSelector(selectMonthIndex);
+  const selectedYear = useAppSelector(selectYear);
 
-  const allTransactions = useSelector(selectExpenseData) ?? [];
+  const allTransactions = useAppSelector(selectExpenseData) ?? [];
   const sortedTransactions = useMemo(() => sortByDateDesc(allTransactions as Expense[]), [allTransactions]);
 
-  const userName = useSelector(selectUserName);
-  const userId = useSelector(selectUserId);
-  const currencySymbol = useSelector(selectCurrencySymbol);
+  const userName = useAppSelector(selectUserName);
+  const userId = useAppSelector(selectUserId);
+  const currencySymbol = useAppSelector(selectCurrencySymbol);
 
   const selectedMonthName = MONTHS[selectedMonthIndex];
   const yearMonth = `${selectedYear}-${getMonthNumber(selectedMonthName)}`;
@@ -62,9 +62,12 @@ const useHome = () => {
       if (userId) {
         dispatch(invalidateExpenseCache());
         dispatch(fetchExpensesByMonth(yearMonth));
+        dispatch(fetchBudgetsByMonth(yearMonth));
       }
     }, [dispatch, userId, yearMonth]),
   );
+
+  const currentBudget = useAppSelector(selectCurrentBudget);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -79,16 +82,21 @@ const useHome = () => {
     });
   }, [dispatch, refreshing, yearMonth]);
 
-  const {totalSpent, transactionCount, avgPerDay} = useMemo(() => {
+  const isCurrentMonth = selectedYear === CURRENT_YEAR && selectedMonthIndex === CURRENT_MONTH_INDEX;
+
+  const {totalSpent, transactionCount, todayTotal} = useMemo(() => {
     const total = (allTransactions ?? []).reduce((sum: number, t: Expense) => sum + t.amount, 0);
     const count = (allTransactions ?? []).length;
-    const daysInMonth = new Date(selectedYear, selectedMonthIndex + 1, 0).getDate();
-    const isCurrentMonth = selectedYear === CURRENT_YEAR && selectedMonthIndex === CURRENT_MONTH_INDEX;
-    const daysElapsed = isCurrentMonth ? new Date().getDate() : daysInMonth;
-    const avg = daysElapsed > 0 ? total / daysElapsed : 0;
 
-    return {totalSpent: total, transactionCount: count, avgPerDay: avg};
-  }, [allTransactions, selectedYear, selectedMonthIndex]);
+    const todayStr = formatDate(new Date(), 'YYYY-MM-DD');
+    const today = isCurrentMonth
+      ? (allTransactions ?? []).reduce((sum: number, t: Expense) => (t.date.startsWith(todayStr) ? sum + t.amount : sum), 0)
+      : 0;
+
+    return {totalSpent: total, transactionCount: count, todayTotal: today};
+  }, [allTransactions, isCurrentMonth]);
+
+  const daysInMonth = useMemo(() => getDaysInMonth(selectedYear, selectedMonthName), [selectedYear, selectedMonthName]);
 
   const handleMonthYearSelect = useCallback(
     (monthIndex: number, year: number) => {
@@ -113,7 +121,10 @@ const useHome = () => {
     availableYears,
     totalSpent,
     transactionCount,
-    avgPerDay,
+    todayTotal,
+    isCurrentMonth,
+    daysInMonth,
+    currentBudget,
     handleMonthYearSelect,
   };
 };

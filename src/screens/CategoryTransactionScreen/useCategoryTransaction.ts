@@ -1,12 +1,10 @@
 import useThemeColors from '../../hooks/useThemeColors';
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import {selectCurrencySymbol} from '../../redux/slice/currencyDataSlice';
 import {RouteProp, useFocusEffect} from '@react-navigation/native';
 import {ExpenseData as Expense} from '../../watermelondb/services';
 import {useCallback, useMemo} from 'react';
-import {fetchExpensesByCategory, selectEverydayExpenseData} from '../../redux/slice/everydayExpenseDataSlice';
-import {AppDispatch} from '../../redux/store';
-
+import {fetchExpensesByCategory, selectFilteredExpenses} from '../../redux/slice/expenseDataSlice';
 export type CategoryTransactionRouteProp = RouteProp<
   {
     CategoryTransactionScreen: {
@@ -22,10 +20,10 @@ export type CategoryTransactionRouteProp = RouteProp<
 >;
 
 const useCategoryTransaction = (route: CategoryTransactionRouteProp) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const transactions = (useSelector(selectEverydayExpenseData) ?? []) as Expense[];
+  const dispatch = useAppDispatch();
+  const transactions = (useAppSelector(selectFilteredExpenses) ?? []) as Expense[];
   const colors = useThemeColors();
-  const currencySymbol = useSelector(selectCurrencySymbol);
+  const currencySymbol = useAppSelector(selectCurrencySymbol);
 
   const {
     categoryId = '',

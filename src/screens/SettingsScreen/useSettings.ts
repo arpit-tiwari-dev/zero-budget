@@ -1,4 +1,3 @@
-import {useDispatch, useSelector} from 'react-redux';
 import {useTranslation} from 'react-i18next';
 import {selectUserName, setUserName} from '../../redux/slice/userNameSlice';
 import {selectUserId} from '../../redux/slice/userIdSlice';
@@ -8,35 +7,49 @@ import {
   selectCurrencySymbol,
   setCurrencyData,
 } from '../../redux/slice/currencyDataSlice';
-import {useCallback, useEffect} from 'react';
+import {useCallback} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
 import {getAppVersion} from '../../utils/getVersion';
 import {useTheme, ThemeMode} from '../../context/ThemeContext';
 import {useDialog} from '../../context/DialogContext';
 import StorageService from '../../utils/asyncStorageService';
 import {updateUserById, updateCurrencyById, deleteAllData} from '../../watermelondb/services';
+import {upsertBudget, deleteBudget} from '../../watermelondb/services/budgetService';
 import {Linking, Platform} from 'react-native';
 import {setIsOnboarded} from '../../redux/slice/isOnboardedSlice';
 import {fetchAllData, selectAllData} from '../../redux/slice/allDataSlice';
-import {AppDispatch} from '../../redux/store';
+import {fetchBudgetsByMonth, selectCurrentBudget} from '../../redux/slice/budgetDataSlice';
+import {selectMonthIndex, selectYear} from '../../redux/slice/monthSelectionSlice';
+import {getMonthNumber, getMonthNames} from '../../utils/dateUtils';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 
 const useSettings = () => {
   const {t} = useTranslation();
-  const userName = useSelector(selectUserName);
-  const userId = useSelector(selectUserId);
-  const currencyId = useSelector(selectCurrencyId);
-  const currencyName = useSelector(selectCurrencyName);
-  const currencySymbol = useSelector(selectCurrencySymbol);
-  const allData = useSelector(selectAllData);
+  const userName = useAppSelector(selectUserName);
+  const userId = useAppSelector(selectUserId);
+  const currencyId = useAppSelector(selectCurrencyId);
+  const currencyName = useAppSelector(selectCurrencyName);
+  const currencySymbol = useAppSelector(selectCurrencySymbol);
+  const allData = useAppSelector(selectAllData);
+
+  const selectedMonthIndex = useAppSelector(selectMonthIndex);
+  const selectedYear = useAppSelector(selectYear);
+  const MONTHS = getMonthNames();
+  const yearMonth = `${selectedYear}-${getMonthNumber(MONTHS[selectedMonthIndex])}`;
+  const currentBudget = useAppSelector(selectCurrentBudget);
 
   const {colors, themeMode, setThemeMode} = useTheme();
   const {showDialog, showAlert} = useDialog();
   const appVersion = getAppVersion();
 
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
 
-  useEffect(() => {
-    dispatch(fetchAllData());
-  }, [dispatch]);
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchAllData());
+      dispatch(fetchBudgetsByMonth(yearMonth));
+    }, [dispatch, yearMonth]),
+  );
 
   const handleThemeSelection = useCallback(async (theme: string) => {
     try {
@@ -182,6 +195,22 @@ const useSettings = () => {
     }
   }, [showDialog, t]);
 
+  const handleBudgetSave = useCallback(
+    async (amount: number, everyMonth: boolean) => {
+      if (!userId) {return;}
+      const month = everyMonth ? `recurring:${yearMonth}` : yearMonth;
+      await upsertBudget(userId, amount, month);
+      dispatch(fetchBudgetsByMonth(yearMonth));
+    },
+    [userId, yearMonth, dispatch],
+  );
+
+  const handleBudgetRemove = useCallback(async () => {
+    if (!currentBudget) {return;}
+    await deleteBudget(currentBudget.id);
+    dispatch(fetchBudgetsByMonth(yearMonth));
+  }, [currentBudget, yearMonth, dispatch]);
+
   return {
     appVersion,
     colors,
@@ -192,6 +221,10 @@ const useSettings = () => {
     userName,
     currencySymbol,
     currencyName,
+    currentBudget,
+    budgetMonthLabel: `${MONTHS[selectedMonthIndex]} ${selectedYear}`,
+    handleBudgetSave,
+    handleBudgetRemove,
     handleReportBug,
     handleRateNow,
     handleGithub,

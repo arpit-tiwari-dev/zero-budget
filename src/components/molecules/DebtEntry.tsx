@@ -8,17 +8,15 @@ import PrimaryView from '../../components/atoms/PrimaryView';
 import {goBack} from '../../utils/navigationUtils';
 import useThemeColors from '../../hooks/useThemeColors';
 import {createDebt, updateDebtById} from '../../watermelondb/services';
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import {selectUserId} from '../../redux/slice/userIdSlice';
-import {fetchAllDebts} from '../../redux/slice/allDebtDataSlice';
-import {fetchDebtsByDebtor} from '../../redux/slice/debtDataSlice';
+import {fetchAllDebts, fetchDebtsByDebtor} from '../../redux/slice/debtDataSlice';
 import DatePicker from '../atoms/DatePicker';
 import {DebtsScreenProp} from '../../screens/AddDebtsScreen';
 import {getISODateTime} from '../../utils/dateUtils';
 import {expenseAmountSchema, expenseSchema} from '../../utils/validationSchema';
 import PrimaryText from '../atoms/PrimaryText';
 import {selectCurrencySymbol} from '../../redux/slice/currencyDataSlice';
-import {AppDispatch} from '../../redux/store';
 import {gs} from '../../styles/globalStyles';
 
 interface DebtEntryProps {
@@ -29,8 +27,8 @@ interface DebtEntryProps {
 const DebtEntry: React.FC<DebtEntryProps> = ({buttonText, route}) => {
   const {t} = useTranslation();
   const colors = useThemeColors();
-  const dispatch = useDispatch<AppDispatch>();
-  const currencySymbol = useSelector(selectCurrencySymbol);
+  const dispatch = useAppDispatch();
+  const currencySymbol = useAppSelector(selectCurrencySymbol);
   const {debtId = '', debtDescription = '', amount = 0, debtorName = '', debtDate = '', debtorId = '', debtType = 'Borrow'} = route.params ?? {};
   const isAddButton = buttonText === 'Add';
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -39,7 +37,7 @@ const DebtEntry: React.FC<DebtEntryProps> = ({buttonText, route}) => {
   const [createdAt, setCreatedAt] = useState(isAddButton ? getISODateTime() : debtDate);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [debtsType, setDebtsType] = useState(isAddButton ? 'Borrow' : debtType);
-  const userId = useSelector(selectUserId);
+  const userId = useAppSelector(selectUserId);
 
   const debtAmountError = hasInteracted ? expenseAmountSchema?.safeParse(Number(debtAmount)).error?.issues || [] : [];
 
@@ -67,7 +65,7 @@ const DebtEntry: React.FC<DebtEntryProps> = ({buttonText, route}) => {
       return;
     }
     try {
-      await updateDebtById(debtId, debtorId, Number(debtAmount), debtName, createdAt, debtsType);
+      await updateDebtById(debtId, Number(debtAmount), debtName, createdAt, debtsType);
 
       dispatch(fetchAllDebts());
       dispatch(fetchDebtsByDebtor(debtorId));

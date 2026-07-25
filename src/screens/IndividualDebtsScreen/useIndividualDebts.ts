@@ -1,18 +1,16 @@
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../redux/hooks';
 import useThemeColors from '../../hooks/useThemeColors';
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {fetchDebtsByDebtor, selectDebtData, selectDebtError, selectDebtLoading} from '../../redux/slice/debtDataSlice';
+import {fetchDebtsByDebtor, selectDebtData, fetchAllDebts} from '../../redux/slice/debtDataSlice';
 import {goBack, navigate} from '../../utils/navigationUtils';
 import {deleteAllDebtsByDebtorId, deleteDebtById, deleteDebtorById} from '../../watermelondb/services';
-import {fetchAllDebts} from '../../redux/slice/allDebtDataSlice';
 import {RouteProp, useFocusEffect} from '@react-navigation/native';
 import {selectCurrencySymbol} from '../../redux/slice/currencyDataSlice';
 import {fetchDebtors} from '../../redux/slice/debtorDataSlice';
 import {sortByDateDesc} from '../../utils/dateUtils';
 import {DebtData as DebtDocType} from '../../watermelondb/services';
 import useAmountColor from '../../hooks/useAmountColor';
-import {fetchIndividualDebtor, selectIndividualDebtorData} from '../../redux/slice/IndividualDebtorSlice';
-import {AppDispatch} from '../../redux/store';
+import {clearIndividualDebtor, fetchIndividualDebtor, selectIndividualDebtorData} from '../../redux/slice/IndividualDebtorSlice';
 import {useDialog} from '../../context/DialogContext';
 import {useTranslation} from 'react-i18next';
 
@@ -29,17 +27,15 @@ export type IndividualDebtsScreenRouteProp = RouteProp<
 
 const useIndividualDebts = (route: IndividualDebtsScreenRouteProp) => {
   const colors = useThemeColors();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const {showDialog} = useDialog();
   const {t} = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
-  const individualDebts = (useSelector(selectDebtData) ?? []) as DebtDocType[];
-  const debtLoading = useSelector(selectDebtLoading);
-  const debtError = useSelector(selectDebtError);
-  const currencySymbol = useSelector(selectCurrencySymbol);
+  const individualDebts = (useAppSelector(selectDebtData) ?? []) as DebtDocType[];
+  const currencySymbol = useAppSelector(selectCurrencySymbol);
   const {debtorId = '', debtorType = ''} = route.params ?? {};
-  const individualDebtor = useSelector(selectIndividualDebtorData);
-  const debtorName = individualDebtor?.title;
+  const individualDebtor = useAppSelector(selectIndividualDebtorData);
+  const debtorName = individualDebtor?.title ?? '';
 
   const {sortedDebts, sortedBorrowings, sortedLendings, totalBorrowings, totalLendings, debtorTotal} = useMemo(() => {
     const sorted = sortByDateDesc(individualDebts);
@@ -125,6 +121,7 @@ const useIndividualDebts = (route: IndividualDebtsScreenRouteProp) => {
 
   useFocusEffect(
     useCallback(() => {
+      dispatch(clearIndividualDebtor());
       dispatch(fetchDebtsByDebtor(debtorId));
       dispatch(fetchIndividualDebtor(debtorId));
     }, [debtorId, dispatch]),
@@ -147,8 +144,6 @@ const useIndividualDebts = (route: IndividualDebtsScreenRouteProp) => {
   return {
     colors,
     refreshing,
-    debtLoading,
-    debtError,
     debtorName,
     debtorId,
     debtorTotal,
