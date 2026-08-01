@@ -22,7 +22,7 @@ jobs:
           node-version: '22'
 
       - name: Install JavaScript dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Install Android SDK and tools
         run: |
