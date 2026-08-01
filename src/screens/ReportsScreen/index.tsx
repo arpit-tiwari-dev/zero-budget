@@ -40,8 +40,21 @@ const ReportsScreen = () => {
   const formatAmount = useFormatAmount();
 
   const budgetMonthLabel = `${selectedMonth} ${selectedYear}`;
-  const dailyBudget = currentBudget && daysInMonth > 0 ? currentBudget.amount / daysInMonth : 0;
-  const dailyLeft = dailyBudget - todayTotal;
+  let dailyBudget = 0;
+  let dailyLeft = 0;
+  if (currentBudget && daysInMonth > 0) {
+    if (isCurrentMonth) {
+      const currentDay = new Date().getDate();
+      const remainingBudget = currentBudget.amount - totalAmountForMonth; // can be negative
+      const remainingDays = Math.max(daysInMonth - currentDay, 1); // avoid div-by-zero; if 0 use 1
+      dailyBudget = remainingBudget / remainingDays;
+      dailyLeft = dailyBudget - todayTotal;
+    } else {
+      // For non-current months use simple per-day average (no live recalculation)
+      dailyBudget = currentBudget.amount / daysInMonth;
+      dailyLeft = dailyBudget - todayTotal;
+    }
+  }
   const budgetExceeded = currentBudget ? totalAmountForMonth > currentBudget.amount : false;
 
   const openBudgetSheet = useCallback(() => {

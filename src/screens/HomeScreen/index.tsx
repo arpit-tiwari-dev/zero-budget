@@ -53,8 +53,20 @@ const HomeScreen = () => {
 
   const budgetPct = currentBudget ? Math.min(Math.round((totalSpent / currentBudget.amount) * 100), 999) : 0;
   const budgetExceeded = currentBudget ? totalSpent > currentBudget.amount : false;
-  const dailyBudget = currentBudget && daysInMonth > 0 ? currentBudget.amount / daysInMonth : 0;
-  const dailyLeft = dailyBudget - todayTotal;
+  let dailyBudget = 0;
+  let dailyLeft = 0;
+  if (currentBudget && daysInMonth > 0) {
+    if (isCurrentMonth) {
+      const currentDay = new Date().getDate();
+      const remainingBudget = currentBudget.amount - totalSpent; // can be negative
+      const remainingDays = Math.max(daysInMonth - currentDay, 1);
+      dailyBudget = remainingBudget / remainingDays;
+      dailyLeft = dailyBudget - todayTotal;
+    } else {
+      dailyBudget = currentBudget.amount / daysInMonth;
+      dailyLeft = dailyBudget - todayTotal;
+    }
+  }
 
   const listHeader = useMemo(
     () => (
