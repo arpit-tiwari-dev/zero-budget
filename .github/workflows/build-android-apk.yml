@@ -50,11 +50,11 @@ jobs:
         run: |
           echo "$RELEASE_KEYSTORE_B64" | base64 --decode > android/zero-release-key.keystore
           cat > keystore.properties <<EOF
-ZERO_UPLOAD_STORE_FILE=android/zero-release-key.keystore
-ZERO_UPLOAD_STORE_PASSWORD=$RELEASE_KEYSTORE_PASSWORD
-ZERO_UPLOAD_KEY_ALIAS=$RELEASE_KEY_ALIAS
-ZERO_UPLOAD_KEY_PASSWORD=$RELEASE_KEY_PASSWORD
-EOF
+          ZERO_UPLOAD_STORE_FILE=android/zero-release-key.keystore
+          ZERO_UPLOAD_STORE_PASSWORD=$RELEASE_KEYSTORE_PASSWORD
+          ZERO_UPLOAD_KEY_ALIAS=$RELEASE_KEY_ALIAS
+          ZERO_UPLOAD_KEY_PASSWORD=$RELEASE_KEY_PASSWORD
+          EOF
         env:
           RELEASE_KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
           RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
