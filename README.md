@@ -4,7 +4,7 @@
     <h1 align="center">zero - Minimal Expense Manager</h1>
 </div>
 
-Zero is a lightweight, open-source expense tracking app for Android & iOS. Built with privacy-first approach — all your financial data stays on your device. No servers, no tracking, no data collection.
+Zero is a lightweight, open-source expense tracking app for Android & iOS. Built with privacy-first approach — all your financial data stays on your device. No servers, no tracking, no data collections.
 
 ## Screenshots
 
