@@ -1,4 +1,4 @@
-name: Build Android Debug APK
+name: Build Android APK
 
 on:
   workflow_dispatch:
@@ -45,12 +45,28 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build Debug APK
-        working-directory: android
-        run: ./gradlew assembleDebug -x lint --no-daemon
+      - name: Write release keystore properties
+        if: ${{ secrets.RELEASE_KEYSTORE_B64 != '' && secrets.RELEASE_KEYSTORE_PASSWORD != '' && secrets.RELEASE_KEY_ALIAS != '' && secrets.RELEASE_KEY_PASSWORD != '' }}
+        run: |
+          echo "$RELEASE_KEYSTORE_B64" | base64 --decode > android/zero-release-key.keystore
+          cat > keystore.properties <<EOF
+ZERO_UPLOAD_STORE_FILE=android/zero-release-key.keystore
+ZERO_UPLOAD_STORE_PASSWORD=$RELEASE_KEYSTORE_PASSWORD
+ZERO_UPLOAD_KEY_ALIAS=$RELEASE_KEY_ALIAS
+ZERO_UPLOAD_KEY_PASSWORD=$RELEASE_KEY_PASSWORD
+EOF
+        env:
+          RELEASE_KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
 
-      - name: Upload APK artifact
+      - name: Build Release APK
+        working-directory: android
+        run: ./gradlew assembleRelease -x lint --no-daemon
+
+      - name: Upload Release APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug.apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: app-release.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
