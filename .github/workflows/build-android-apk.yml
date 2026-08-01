@@ -16,6 +16,15 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install JavaScript dependencies
+        run: npm install
+
       - name: Install Android SDK and tools
         run: |
           sudo apt-get update
