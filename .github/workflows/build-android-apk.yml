@@ -46,15 +46,18 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Write release keystore properties
-        if: ${{ secrets.RELEASE_KEYSTORE_B64 != '' && secrets.RELEASE_KEYSTORE_PASSWORD != '' && secrets.RELEASE_KEY_ALIAS != '' && secrets.RELEASE_KEY_PASSWORD != '' }}
         run: |
-          echo "$RELEASE_KEYSTORE_B64" | base64 --decode > android/zero-release-key.keystore
-          cat > keystore.properties <<EOF
-          ZERO_UPLOAD_STORE_FILE=android/zero-release-key.keystore
-          ZERO_UPLOAD_STORE_PASSWORD=$RELEASE_KEYSTORE_PASSWORD
-          ZERO_UPLOAD_KEY_ALIAS=$RELEASE_KEY_ALIAS
-          ZERO_UPLOAD_KEY_PASSWORD=$RELEASE_KEY_PASSWORD
+          if [ -n "$RELEASE_KEYSTORE_B64" ] && [ -n "$RELEASE_KEYSTORE_PASSWORD" ] && [ -n "$RELEASE_KEY_ALIAS" ] && [ -n "$RELEASE_KEY_PASSWORD" ]; then
+            echo "$RELEASE_KEYSTORE_B64" | base64 --decode > android/zero-release-key.keystore
+            cat > keystore.properties <<EOF
+              ZERO_UPLOAD_STORE_FILE=android/zero-release-key.keystore
+              ZERO_UPLOAD_STORE_PASSWORD=$RELEASE_KEYSTORE_PASSWORD
+              ZERO_UPLOAD_KEY_ALIAS=$RELEASE_KEY_ALIAS
+              ZERO_UPLOAD_KEY_PASSWORD=$RELEASE_KEY_PASSWORD
           EOF
+          else
+            echo "No release keystore secrets set; skipping keystore generation"
+          fi
         env:
           RELEASE_KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
           RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
